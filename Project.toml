@@ -1,0 +1,10 @@
+name = "BenchmarkDataNLP"
+uuid = "473ed2bd-0a1f-44e6-8c06-93ed739d6613"
+version = "0.1.0"
+
+[deps]
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+
+[compat]
+julia = "1.6"
