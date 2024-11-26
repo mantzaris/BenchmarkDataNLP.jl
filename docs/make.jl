@@ -1,13 +1,20 @@
 using Documenter
 using BenchmarkDataNLP
 
+DocMeta.setdocmeta!(BenchmarkDataNLP, :DocTestSetup, :(using BenchmarkDataNLP); recursive=true)
+
+
 makedocs(
-    sitename = "BenchmarkDataNLP",
-    format = Documenter.HTML(),
-    modules = [BenchmarkDataNLP]
+    modules = [BenchmarkDataNLP],
+    format =  Documenter.HTML(),
+    sitename="BenchmarkDataNLP.jl",
+    pages = [
+        "Home" => "index.md",
+        # Add more pages as needed
+    ],
+    authors = "Alexander V. Mantzaris",
 )
 
-# Documenter can also automatically deploy documentation to gh-pages.
-# See "Hosting Documentation" and deploydocs() in the Documenter manual
-# for more information.
-deploydocs()
+deploydocs(
+    repo = "github.com/mantzaris/BenchmarkDataNLP.jl.git"
+)

@@ -13,7 +13,6 @@ jobs:
       contents: write
       pages: write
       actions: write
-      pull-requests: read
       statuses: write
     runs-on: ubuntu-latest
     steps:
@@ -33,3 +32,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: julia --project=docs/ docs/make.jl
+      - name: Run doctests
+        shell: julia --project=docs --color=yes {0}
+        run: |
+          using Documenter: DocMeta, doctest
+          using BenchmarkDataNLP
+          DocMeta.setdocmeta!(BenchmarkDataNLP, :DocTestSetup, :(using BenchmarkDataNLP); recursive=true)
+          doctest(BenchmarkDataNLP)
