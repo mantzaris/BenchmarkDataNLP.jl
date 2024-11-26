@@ -8,6 +8,8 @@ module BenchmarkDataNLP
         greet()
 
     Prints a friendly greeting message to the console.
+
+    Returns nothing
     """
     greet() = println("Hello World! Yours Truly, B.D.NLP")
 
@@ -15,6 +17,8 @@ module BenchmarkDataNLP
         add_random_suffix(input::AbstractString) -> String
 
     Takes a string and returns it with a random 5-character suffix added.
+
+    Returns a string
 
     # Examples
 
@@ -31,6 +35,8 @@ module BenchmarkDataNLP
 
     Repeats a string or character a specified number of times.
 
+    Returns a string
+    
     # Examples
 
         julia> repeat_string("hi", 3)

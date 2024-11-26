@@ -6,4 +6,6 @@ Documentation for BenchmarkDataNLP.jl
 
 ```@autodocs
 Modules = [BenchmarkDataNLP]
+Private = false
+Order = [:function]
 ```
