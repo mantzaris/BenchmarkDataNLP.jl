@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: "1.6" # Specify the Julia version you are using
+          version: "lts" # Specify the Julia version you are using
       - name: Install dependencies
         run: |
           julia --project=docs/ -e '
