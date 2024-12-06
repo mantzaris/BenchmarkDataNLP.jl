@@ -21,24 +21,144 @@ module BenchmarkDataNLP
         start_symbol::String
     end
 
-    # Create a simple Context Free Grammar as an example
-    function create_cfg()
-        nonterminals = ["S", "NP", "VP", "Det", "Noun", "Verb"]
-        terminals = ["the", "a", "cat", "dog", "chases", "sees"]
+    # Global Terminal Dictionaries:
+    # Here we store all possible terminals for each category.
+    const ALL_TERMINALS = Dict(
+        "Det" => ["the", "a", "every", "some", "no", "this", "that"],
+        "Noun" => ["cat", "dog", "horse", "elephant", "lion", "giraffe"],
+        "Verb" => ["chases", "sees", "admires", "devours", "observes", "questions"],
+        "Adjective" => ["furry", "angry", "tiny", "massive", "quick", "lazy"],
+        "Preposition" => ["in", "on", "under", "over", "near", "beside"]
+    )
 
-        productions = Dict(
-            "S" => [["NP", "VP"]],
-            "NP" => [["Det", "Noun"]],
-            "VP" => [["Verb", "NP"]],
-            "Det" => [["the"], ["a"]],
-            "Noun" => [["cat"], ["dog"]],
-            "Verb" => [["chases"], ["sees"]]
-        )
+    # Global Terminal Dictionaries:
+    # Here we store all possible terminals for each category.
+    const ALL_TERMINALS = Dict(
+        "Det" => ["the", "a", "every", "some", "no", "this", "that"],
+        "Noun" => ["cat", "dog", "horse", "elephant", "lion", "giraffe"],
+        "Verb" => ["chases", "sees", "admires", "devours", "observes", "questions"],
+        "Adjective" => ["furry", "angry", "tiny", "massive", "quick", "lazy"],
+        "Preposition" => ["in", "on", "under", "over", "near", "beside"]
+    )
 
-        start_symbol = "S"
+    # Global Productions Dictionary:
+    # Each key is a nonterminal. The value is a vector of tuples (min_complexity, production_vector).
+    # min_complexity: The minimum complexity level at which this production becomes available.
+    const ALL_PRODUCTIONS = Dict{String, Vector{Tuple{Int, Vector{String}}}}(
+        "S" => [(1, ["NP", "VP"])],
+        "NP" => [
+            (1, ["Det", "Noun"]),
+            (3, ["Det", "AdjP", "Noun"]),
+            (4, ["Det", "Noun", "PP"]),
+            (5, ["Det", "AdjP", "Noun", "PP"])
+        ],
+        "VP" => [
+            (1, ["Verb", "NP"])
+        ],
+        "AdjP" => [
+            (3, ["Adjective"]),
+            (4, ["Adjective", "AdjP"])
+        ],
+        "PP" => [
+            (4, ["Preposition", "NP"])
+        ],
+        "Det" => [],
+        "Noun" => [],
+        "Verb" => [],
+        "Adjective" => [],
+        "Preposition" => []
+    )
+    
+    
 
-        return CFG(nonterminals, terminals, productions, start_symbol)
+    # We can create a mapping from complexity level to how many terminals of each type we pick.
+    function complexity_to_counts(complexity_level::Int)
+        # For example: scale nouns, verbs, and determiners linearly.
+        noun_count = min(length(ALL_TERMINALS["Noun"]), 2 + complexity_level)
+        verb_count = min(length(ALL_TERMINALS["Verb"]), 2 + complexity_level)
+        det_count  = min(length(ALL_TERMINALS["Det"]), 2 + complexity_level)
+        # Adjectives and prepositions appear only if they are needed by some productions at that complexity.
+        # We can simply pick some number proportional to complexity as well:
+        adj_count = complexity_level # pick up to complexity_level adjectives if needed
+        prep_count = complexity_level # similarly for prepositions
+        return (det_count, noun_count, verb_count, adj_count, prep_count)
     end
+
+
+    # Filter productions by complexity level:
+    function filter_productions(all_prods::Dict{String,Vector{Tuple{Int,Vector{String}}}}, complexity_level::Int)
+        filtered = Dict{String, Vector{Vector{String}}}()
+        for (nt, rule_list) in all_prods
+            # Include only those whose min_complexity <= complexity_level
+            valid_rules = [rhs for (c_level, rhs) in rule_list if c_level <= complexity_level]
+            # It's possible some categories (like lexical ones) are empty or not needed
+            # If valid_rules is empty but we need that nonterminal, we just skip it or leave it empty.
+            filtered[nt] = valid_rules
+        end
+        return filtered
+    end
+
+
+    # Assign terminals to their categories and fill in the lexical productions accordingly.
+    function assign_terminals!(productions::Dict{String,Vector{Vector{String}}}, complexity_level::Int)
+        det_count, noun_count, verb_count, adj_count, prep_count = complexity_to_counts(complexity_level)
+
+        # Pick subsets (or all) terminals:
+        chosen_dets = ALL_TERMINALS["Det"][1:min(end, det_count)]
+        chosen_nouns = ALL_TERMINALS["Noun"][1:min(end, noun_count)]
+        chosen_verbs = ALL_TERMINALS["Verb"][1:min(end, verb_count)]
+
+        # Only add adjectives if AdjP rules exist at this complexity:
+        chosen_adjs = []
+        if haskey(productions, "AdjP") && !isempty(productions["AdjP"]) 
+            chosen_adjs = ALL_TERMINALS["Adjective"][1:min(end, adj_count)]
+        end
+
+        # Only add prepositions if PP rules exist:
+        chosen_preps = []
+        if haskey(productions, "PP") && !isempty(productions["PP"])
+            chosen_preps = ALL_TERMINALS["Preposition"][1:min(end, prep_count)]
+        end
+
+        # Update lexical categories:
+        if haskey(productions, "Det")
+            productions["Det"] = [[d] for d in chosen_dets]
+        end
+        if haskey(productions, "Noun")
+            productions["Noun"] = [[n] for n in chosen_nouns]
+        end
+        if haskey(productions, "Verb")
+            productions["Verb"] = [[v] for v in chosen_verbs]
+        end
+        if haskey(productions, "Adjective")
+            productions["Adjective"] = [[a] for a in chosen_adjs]
+        end
+        if haskey(productions, "Preposition")
+            productions["Preposition"] = [[p] for p in chosen_preps]
+        end
+
+        # Build the terminal list
+        terminals = vcat(chosen_dets, chosen_nouns, chosen_verbs, chosen_adjs, chosen_preps)
+        return terminals
+    end
+
+
+    function create_cfg(complexity_level::Int)
+        # Filter and assign terminals based on complexity
+        filtered_prods = filter_productions(ALL_PRODUCTIONS, complexity_level)
+        terminals = assign_terminals!(filtered_prods, complexity_level)
+    
+        nonterminals = collect(keys(filtered_prods))
+        start_symbol = "S"
+        if !haskey(filtered_prods, start_symbol)
+            error("No 'S' symbol found in productions! Check your production definitions.")
+        end
+    
+        return CFG(nonterminals, terminals, filtered_prods, start_symbol)
+    end
+    
+
+
 
     # Recursive string generation function
     function generate_string(
@@ -49,39 +169,37 @@ module BenchmarkDataNLP
         recursion_counter::Dict{String, Int},
         max_recursion::Int
     )
-        # If the symbol is a terminal, simply return it
         if symbol in cfg.terminals
             return symbol
-
-        # If we have reached the maximum allowed depth, return an empty string to avoid complexity explosion
         elseif current_depth >= max_depth
             return ""
         else
-            # Retrieve possible productions for the current non-terminal
             possible_productions = cfg.productions[symbol]
 
-            # Select one production at random to introduce variety
+            # If no productions available (empty?), return empty string
+            if isempty(possible_productions)
+                return ""
+            end
+
             chosen_production = rand(possible_productions)
 
             result_string = ""
             for sub_symbol in chosen_production
-                # If we encounter the same symbol again, check recursion depth
                 if sub_symbol == symbol
                     if recursion_counter[symbol] >= max_recursion
-                        # If recursion exceeds max limit, skip this branch
                         continue
                     else
                         recursion_counter[symbol] += 1
                     end
                 end
 
-                # Recursively generate a substring
                 substring = generate_string(cfg, sub_symbol, current_depth + 1, max_depth, recursion_counter, max_recursion)
-                # Concatenate substrings with a space
-                result_string = result_string * " " * substring
+                if !isempty(substring)
+                    result_string = result_string * " " * substring
+                end
             end
 
-            return result_string
+            return strip(result_string)
         end
     end
 
@@ -141,11 +259,12 @@ module BenchmarkDataNLP
         number_of_strings::Int,
         max_depth::Int,
         max_length::Int,
-        max_recursion::Int
+        max_recursion::Int,
+        complexity_level::Int=1
     )
         generated_strings = String[]
 
-        cfg = create_cfg()
+        cfg = create_cfg(complexity_level)
 
         for _ in 1:number_of_strings
             # Initialize recursion counters for each nonterminal
@@ -186,13 +305,23 @@ module BenchmarkDataNLP
         "a dog sees a dog"
         ...
     """
-    function generate_dataset(
-        number_of_strings::Int,
-        complexity_level::Int
-    )
+    function generate_dataset(number_of_strings::Int, complexity_level::Int; seed::Int=1234)
+        Random.seed!(seed)
         max_depth, max_length, max_recursion = complexity_to_params(complexity_level)
-        return generate_dataset( number_of_strings, max_depth, max_length, max_recursion )
+        cfg = create_cfg(complexity_level)
+    
+        generated_strings = String[]
+        for _ in 1:number_of_strings
+            recursion_counter = Dict{String, Int}(nt => 0 for nt in cfg.nonterminals)
+            str = generate_string(cfg, cfg.start_symbol, 0, max_depth, recursion_counter, max_recursion)
+            str = strip(str)
+            if 0 < length(split(str)) <= max_length
+                push!(generated_strings, str)
+            end
+        end
+        return generated_strings
     end
+    
 
 
 
