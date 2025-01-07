@@ -1,3 +1,15 @@
+function linear_extrapolate(c::Int, vmin::Float64, vmax::Float64; 
+                                cmin::Int=1, cmid::Int=100)
+
+    if c < cmin
+        error("Complexity must be >= $cmin.")
+    end
+    
+    # slope from cmin => cmid
+    slope = (vmax - vmin) / (cmid - cmin)
+    return vmin + slope*(c - cmin)
+end
+
 
 
 function try_to_get_integer(variable_value)

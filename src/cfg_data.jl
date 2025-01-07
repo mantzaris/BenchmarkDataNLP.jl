@@ -1,18 +1,17 @@
-include("utilities/complexity_to_parameters.jl")
+include("utilities/cfg_parameters.jl")
 
 struct CFGSpec
     complexity::Int               # e.g., 0 - 100 (or higher)
-
     polysemy::Bool                # enable/disable overlap of words among roles
+    num_sentences::Int
+
     alphabet::Vector{Char}        # characters used for generating words
     punctuation::Vector{Char}     # punctuation symbols
     vocabulary::Vector{String}    # master list of generated words
     roles::Dict{Symbol, Vector{String}}  # each symbol -> subset of vocabulary
-    subroles::Dict{Symbol, Vector{String}}
+    # TODO add subroles
     grammar_rules::Vector{Any}    # container for your CFG production rules
     
-    max_word_length::Int
-    num_sentences::Int
     user_filename::String #complexity will be part of the file name too
     rng::Random.AbstractRNG
 end
