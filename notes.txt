@@ -1,0 +1,6 @@
+] activate .
+] dev .
+using Pkg
+Pkg.add("Revise")
+using Revise
+using BenchmarkDataNLP

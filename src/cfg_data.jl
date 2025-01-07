@@ -18,8 +18,15 @@ function generate_sentence(
     start_role::Symbol,
     grammar::Dict{Symbol, Vector{Vector{Any}}},
     ; 
-    roles_dict::Dict{Symbol, Vector{String}}
+    roles_dict::Dict{Symbol, Vector{String}},
+    depth::Int = 0,
+    max_depth::Int = 20
 )
+
+    if depth > max_depth # ? we've recursed too far, assume we won't find a terminal
+        return ""
+    end
+
     expansions = get(grammar, start_role, nothing)
     if expansions === nothing
         # This role wasn't defined in grammar expansions, so maybe it's a "terminal role"
@@ -35,7 +42,7 @@ function generate_sentence(
         parts = String[]
         for item in chosen_expansion
             if item isa Symbol
-                push!(parts, generate_sentence(item, grammar; roles_dict=roles_dict))
+                push!(parts, generate_sentence(item, grammar; roles_dict=roles_dict, depth=depth+1, max_depth=max_depth))
             elseif item isa String
                 push!(parts, item)
             else
@@ -78,6 +85,7 @@ function produce_corpus_lines(
         lines[i] = generate_sentence(local_start, grammar; roles_dict=roles_dict)
     end
 
+    # TODO make this 3 times for training / testing /validation
     outfilename = base_filename * ".jsonl"
     open(outfilename, "w") do io
         for line in lines

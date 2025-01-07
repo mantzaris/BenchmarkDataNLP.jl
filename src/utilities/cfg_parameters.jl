@@ -20,18 +20,18 @@ const min_expansion_size = 1
 const expansion_size_complexity_100 = 5
 
 function sample_alphabet(complexity::Int)
-    char_number = round(Int, linear_extrapolate(c, min_alphabet_size, alphabet_size_complexity_100; cmin=1, cmid=100))    
+    char_number = round(Int, linear_extrapolate(complexity, min_alphabet_size, alphabet_size_complexity_100; cmin=1, cmid=100))    
     return Char.( alphabet_unicode_start_ind:alphabet_unicode_start_ind+char_number-1 )
 end
 
 function sample_punctuation(complexity::Int)
-    char_number = round(Int, linear_extrapolate(c, min_punctuation_size, punctuation_size_complexity_100; cmin=1, cmid=100))
+    char_number = round(Int, linear_extrapolate(complexity, min_punctuation_size, punctuation_size_complexity_100; cmin=1, cmid=100))
     return Char.( punctuation_unicode_start_ind:punctuation_unicode_start_ind+char_number-1 )
 end
 
 function sample_vocabulary(complexity::Int, alphabet::Vector{Char})::Vector{String}
-    vocabulary_size = round(Int, linear_extrapolate(c, min_vocabulary_size, vocabulary_size_complexity_100; cmin=1, cmid=100))
-    max_word_size = round(Int, linear_extrapolate(c, min_word_size, word_size_complexity_100; cmin=1, cmid=100))
+    vocabulary_size = round(Int, linear_extrapolate(complexity, min_vocabulary_size, vocabulary_size_complexity_100; cmin=1, cmid=100))
+    max_word_size = round(Int, linear_extrapolate(complexity, min_word_size, word_size_complexity_100; cmin=1, cmid=100))
 
     words = Vector{String}(undef, vocabulary_size)
 
@@ -74,7 +74,6 @@ function assign_roles_to_vocab(roles::Vector{Symbol}, vocab::Vector{String}, pol
                 push!(roles_dict[r], word)
             end
         else
-            # single role
             chosen = rand(roles)
             push!(roles_dict[chosen], word)
         end
@@ -91,8 +90,8 @@ function generate_random_expansions_for_role(role::Symbol, roles::Vector{Symbol}
         nitems = rand(1:3)
         expansion_i = Any[]
         for j in 1:nitems
-            if rand() < 0.5 && !isempty(roles_dict[role])
-                # pick a word from this role's vocabulary subset
+            if rand() < 0.5 && !isempty(roles_dict[role]) # ! increase probability for more quick terminal symbol
+                # pick a word from this role's vocabulary subset, chance pick a terminal
                 push!(expansion_i, rand(roles_dict[role]))
             else
                 # reference some other role
