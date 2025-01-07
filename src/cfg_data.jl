@@ -1,19 +1,91 @@
 include("utilities/cfg_parameters.jl")
 
-struct CFGSpec
-    complexity::Int               # e.g., 0 - 100 (or higher)
-    polysemy::Bool                # enable/disable overlap of words among roles
-    num_sentences::Int
 
-    alphabet::Vector{Char}        # characters used for generating words
-    punctuation::Vector{Char}     # punctuation symbols
-    vocabulary::Vector{String}    # master list of generated words
-    roles::Dict{Symbol, Vector{String}}  # each symbol -> subset of vocabulary
-    # TODO add subroles
-    grammar_rules::Vector{Any}    # container for your CFG production rules
-    
-    user_filename::String #complexity will be part of the file name too
-    rng::Random.AbstractRNG
+# TODO: bring in all the functions to keep it in a single file
+
+
+"""
+    generate_sentence(start_role::Symbol, grammar::Dict{Symbol, Vector{Vector{Any}}};
+                    roles_dict::Dict{Symbol, Vector{String}})
+Generate a single line from the grammar by recursively expanding `start_role`.
+- If `start_role` has expansions in `grammar`, pick one at random and expand each item.
+- If `start_role` is not in `grammar`, try picking a word from `roles_dict[start_role]`.
+- If that's empty, return an empty string.
+
+This approach can produce short or long lines depending on the expansions.
+"""
+function generate_sentence(
+    start_role::Symbol,
+    grammar::Dict{Symbol, Vector{Vector{Any}}},
+    ; 
+    roles_dict::Dict{Symbol, Vector{String}}
+)
+    expansions = get(grammar, start_role, nothing)
+    if expansions === nothing
+        # This role wasn't defined in grammar expansions, so maybe it's a "terminal role"
+        words_list = get(roles_dict, start_role, String[])
+        if !isempty(words_list)
+            return rand(words_list)
+        else
+            return ""  # fallback if there's truly nothing
+        end
+    else
+        # We do have expansions for this role
+        chosen_expansion = rand(expansions)  # e.g. ["someWord", :Role2, ...]
+        parts = String[]
+        for item in chosen_expansion
+            if item isa Symbol
+                push!(parts, generate_sentence(item, grammar; roles_dict=roles_dict))
+            elseif item isa String
+                push!(parts, item)
+            else
+                @warn "Unexpected item type $(typeof(item)) in expansion"
+            end
+        end
+        return join(parts, " ")
+    end
+end
+
+
+"""
+    produce_corpus_lines(
+        grammar::Dict{Symbol, Vector{Vector{Any}}},
+        roles_dict::Dict{Symbol, Vector{String}},
+        roles::Vector{Symbol},
+        num_sentences::Int,
+        base_filename::String
+    )
+
+Generate `num_sentences` lines from the given grammar. The lines are saved
+into a `.jsonl` file named `base_filename * ".jsonl"`.
+
+By default, it uses the *first* role in `roles` as the start symbol for
+all lines. If you'd like to pick a random start role each time, replace the
+`start_role = first(roles)` logic accordingly.
+"""
+function produce_corpus_lines(
+    grammar::Dict{Symbol, Vector{Vector{Any}}},
+    roles_dict::Dict{Symbol, Vector{String}},
+    roles::Vector{Symbol},
+    num_sentences::Int,
+    base_filename::String
+)
+
+    lines = Vector{String}(undef, num_sentences)
+
+    for i in 1:num_sentences
+        local_start = rand(roles)
+        lines[i] = generate_sentence(local_start, grammar; roles_dict=roles_dict)
+    end
+
+    outfilename = base_filename * ".jsonl"
+    open(outfilename, "w") do io
+        for line in lines
+            write(io, "{\"text\": \"$line\"}\n")
+        end
+    end
+
+    @info "Wrote $num_sentences lines to $outfilename"
 end
 
 """
@@ -48,17 +120,20 @@ generate_corpus_CFG(
 )
 """
 function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_000, 
-        enable_polysemy::Bool = false, base_filename::AbstractString = "MyDataset" )
+                                enable_polysemy::Bool = false, base_filename::AbstractString = "CFG_Corpus" )
 
     if complexity <= 0 || complexity > 1000
         error("Complexity must be >= 1 and <= 1000")
     end
 
-    
-    
-    @info "Called generate_corpus_CFG with the following parameters:" 
-    @info " complexity = $complexity" 
-    @info " num_sentences = $num_sentences" 
-    @info " enable_polysemy = $enable_polysemy" 
-    @info " base_filename = $base_filename" 
+    alphabet = sample_alphabet(complexity)
+    # TODO: use punctuation!?! or maybe not?...
+    punctuation = sample_punctuation(complexity) # ! use this 
+    vocabulary = sample_vocabulary(complexity, alphabet)
+    roles = build_roles(complexity)
+    roles_dict = assign_roles_to_vocab(roles, vocabulary, enable_polysemy)
+    grammar = build_grammar(roles, roles_dict, complexity)
+
+    produce_corpus_lines(grammar, roles_dict, roles, num_sentences, base_filename)
+    return nothing
 end

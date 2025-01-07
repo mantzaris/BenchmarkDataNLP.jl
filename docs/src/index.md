@@ -29,7 +29,7 @@ At **complexity = 100**, `BenchmarkDataNLP.jl` uses the following default parame
   - As complexity increases, the vocabulary, grammar rules, and role/subrole definitions expand, offering progressively more intricate linguistic structures.
   - Up to complexity 100 the grammar expansions are more close to resembling normal language (human) constructs producing text that is mostly linguistic. From 101 onward, the expansions are more random to capture arbitrary symbolic or code-like patterns.
 
-This linear scaling ensures that users can move from extremely simple, minimal text corpora up to rich, varied corpora without modifying multiple parameters manually. For example, you might begin at `complexity = 1` with very few words and minimal grammatical structures, then gradually progress toward `complexity = 100` (and higher) to produce more challenging datasets that test the limits of NLP architectures (up to `complexity = 200` is supported and although not clamped larger values may produce saturated data).
+This linear scaling ensures that users can move from extremely simple, minimal text corpora up to rich, varied corpora without modifying multiple parameters manually. For example, you might begin at `complexity = 1` with very few words and minimal grammatical structures, then gradually progress toward `complexity = 100` (and higher) to produce more challenging datasets that test the limits of NLP architectures (up to `complexity = 200` is supported and although not clamped larger values may produce saturated data but a hard limit is only put at 1,000).
 
 usage:
 

@@ -35,8 +35,8 @@ function sample_vocabulary(complexity::Int, alphabet::Vector{Char})::Vector{Stri
 
     words = Vector{String}(undef, vocabulary_size)
 
-    # TODO ensure in future that words are unique
-    # TODO distribution on word size
+    # * ensure in future that words are unique
+    # * distribution on word size
     for i in 1:vocabulary_size
         wlen = rand(1:max_word_size)
         # sample wlen chars from the alphabet
@@ -68,7 +68,7 @@ function assign_roles_to_vocab(roles::Vector{Symbol}, vocab::Vector{String}, pol
     roles_dict = Dict{Symbol, Vector{String}}(r => String[] for r in roles)
     for word in vocab
         if polysemy
-            # TODO the word appears in multiple roles, e.g., 1 or 2 roles, generalize more
+            # * the word appears in multiple roles, e.g., 1 or 2 roles, generalize more
             chosen = sample(roles, rand([1,2]); replace=false)
             for r in chosen
                 push!(roles_dict[r], word)
@@ -113,3 +113,4 @@ function build_grammar(roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{St
     end
     return grammar
 end
+
