@@ -1,10 +1,11 @@
 module BenchmarkDataNLP
 
+    using Random
+    using JSON
+
     include("cfg_data.jl")
 
     export generate_corpus_CFG, greet, generate_dataset
-
-    using Random
 
 
     

@@ -1,8 +1,103 @@
 include("utilities/cfg_parameters.jl")
-
+using JSON
 
 # TODO: bring in all the functions to keep it in a single file
 
+
+"""
+    save_metadata_json(
+        filename::String,
+        complexity::Int,
+        enable_polysemy::Bool,
+        num_sentences::Int,
+        base_filename::String,
+        alphabet::Vector{Char},
+        punctuation::Vector{Char},
+        vocabulary::Vector{String},
+        roles::Vector{Symbol},
+        roles_dict::Dict{Symbol, Vector{String}},
+        grammar::Dict{Symbol, Vector{Vector{Any}}}
+    )
+
+Serialize the synthetic CFG 'metadata' used to produce corpus lines into a 
+single .json file named `filename`.
+
+- Converts all `Symbol` keys/items to `String`.
+- Stores a variety of fields: complexity, polysemy, number of sentences, etc.
+
+Example usage:
+```julia
+# after building everything:
+save_metadata_json(
+    "MyMetadata.json",
+    complexity,
+    enable_polysemy,
+    num_sentences,
+    base_filename,
+    alphabet,
+    punctuation,
+    vocabulary,
+    roles,
+    roles_dict,
+    grammar
+)
+
+"""
+function save_metadata_json( filename::String, complexity::Int, enable_polysemy::Bool, num_sentences::Int, base_filename::String, alphabet::Vector{Char}, punctuation::Vector{Char}, vocabulary::Vector{String}, roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{String}}, grammar::Dict{Symbol, Vector{Vector{Any}}} )
+
+    # 1) Convert `alphabet` and `punctuation` to strings or store them directly as array of chars.
+    alphabet_as_strings = string.(alphabet)       # each Char => String
+    punctuation_as_strings = string.(punctuation)
+    
+    # 2) Convert roles to array of strings
+    roles_as_strings = map(string, roles)
+    
+    # 3) Convert roles_dict to dictionary of string => array of strings
+    roles_dict_as_strings = Dict{String, Vector{String}}()
+    for (sym, arr) in roles_dict
+        roles_dict_as_strings[string(sym)] = arr
+    end
+    
+    grammar_as_strings = Dict{String, Vector{Vector{String}}}()
+    for (sym, expansions) in grammar
+        expansions_as_strings = Vector{Vector{String}}()
+        for expansion in expansions
+            converted = String[]
+            for item in expansion
+                if item isa Symbol
+                    push!(converted, string(item))
+                elseif item isa String
+                    push!(converted, item)
+                else
+                    push!(converted, string(item))
+                end
+            end
+            push!(expansions_as_strings, converted)
+        end
+        grammar_as_strings[string(sym)] = expansions_as_strings
+    end
+
+    metadata = Dict(
+        "complexity"      => complexity,
+        "enable_polysemy" => enable_polysemy,
+        "num_sentences"   => num_sentences,
+        "base_filename"   => base_filename,
+        "alphabet"        => alphabet_as_strings,
+        "punctuation"     => punctuation_as_strings,
+        "roles"           => roles_as_strings,
+        "roles_dict"      => roles_dict_as_strings,
+        "grammar"         => grammar_as_strings,
+        "vocabulary"      => vocabulary
+    )
+
+    open(filename, "w") do io
+        json_str = JSON.json(metadata)
+        print(io, json_str)
+        JSON.print(io, metadata)
+    end
+    @info "Saved metadata to $filename"
+
+end
 
 """
     generate_sentence(start_role::Symbol, grammar::Dict{Symbol, Vector{Vector{Any}}};
@@ -20,7 +115,7 @@ function generate_sentence(
     ; 
     roles_dict::Dict{Symbol, Vector{String}},
     depth::Int = 0,
-    max_depth::Int = 20
+    max_depth::Int = 15
 )
 
     if depth > max_depth # ? we've recursed too far, assume we won't find a terminal
@@ -141,6 +236,21 @@ function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_0
     roles = build_roles(complexity)
     roles_dict = assign_roles_to_vocab(roles, vocabulary, enable_polysemy)
     grammar = build_grammar(roles, roles_dict, complexity)
+
+    meta_filename = base_filename * "_metadata.json"
+    save_metadata_json(
+        meta_filename,
+        complexity,
+        enable_polysemy,
+        num_sentences,
+        base_filename,
+        alphabet,
+        punctuation,
+        vocabulary,
+        roles,
+        roles_dict,
+        grammar
+    )
 
     produce_corpus_lines(grammar, roles_dict, roles, num_sentences, base_filename)
     return nothing

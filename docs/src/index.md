@@ -19,7 +19,7 @@ At **complexity = 100**, `BenchmarkDataNLP.jl` uses the following default parame
 - **Character Set**: 50 letters (characters)
 - **Punctuation**: 10 characters
 - **Maximum Word Length**: 20 characters
-- **Major Roles**: 10
+- **Major Roles**: 50
 - **Polysemy**:
   - Controlled by a boolean flag `enable_polysemy`
   - If true, a certain percentage of the vocabulary is allowed to appear in multiple roles.

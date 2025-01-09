@@ -4,3 +4,4 @@ using Pkg
 Pkg.add("Revise")
 using Revise
 using BenchmarkDataNLP
+generate_corpus_CFG(complexity=20, num_sentences=100, enable_polysemy=false, base_filename="TestOutput")

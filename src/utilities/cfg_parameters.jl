@@ -15,9 +15,9 @@ const min_vocabulary_size = 10
 const vocabulary_size_complexity_100 = 10_000
 
 const min_role_size = 2
-const role_size_complexity_100 = 10
+const role_size_complexity_100 = 50
 const min_expansion_size = 1
-const expansion_size_complexity_100 = 5
+const expansion_size_complexity_100 = 20
 
 function sample_alphabet(complexity::Int)
     char_number = round(Int, linear_extrapolate(complexity, min_alphabet_size, alphabet_size_complexity_100; cmin=1, cmid=100))    
@@ -86,11 +86,11 @@ function generate_random_expansions_for_role(role::Symbol, roles::Vector{Symbol}
     
     expansions = Vector{Vector{Any}}()
     for i in 1:expansions_count
-        # e.g. pick 1..3 items referencing either another role or a word from roles_dict
-        nitems = rand(1:3)
+        
+        nitems = rand(2:6) # ? can make the expansions lover
         expansion_i = Any[]
         for j in 1:nitems
-            if rand() < 0.5 && !isempty(roles_dict[role]) # ! increase probability for more quick terminal symbol
+            if rand() < 0.8 && !isempty(roles_dict[role]) # ! increase probability for more quick terminal symbol
                 # pick a word from this role's vocabulary subset, chance pick a terminal
                 push!(expansion_i, rand(roles_dict[role]))
             else
