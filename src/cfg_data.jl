@@ -43,11 +43,14 @@ save_metadata_json(
 )
 
 """
-function save_metadata_json( filename::String, complexity::Int, enable_polysemy::Bool, num_sentences::Int, base_filename::String, alphabet::Vector{Char}, punctuation::Vector{Char}, vocabulary::Vector{String}, roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{String}}, grammar::Dict{Symbol, Vector{Vector{Any}}} )
+function save_metadata_json( filename::String, complexity::Int, enable_polysemy::Bool, num_sentences::Int,
+                                base_filename::String, alphabet::Vector{Char}, punctuation::Vector{String},
+                                vocabulary::Vector{String}, roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{String}},
+                                grammar::Dict{Symbol, Vector{Vector{Any}}} )
 
     # 1) Convert `alphabet` and `punctuation` to strings or store them directly as array of chars.
     alphabet_as_strings = string.(alphabet)       # each Char => String
-    punctuation_as_strings = string.(punctuation)
+    # punctuation_as_strings = string.(punctuation)
     
     # 2) Convert roles to array of strings
     roles_as_strings = map(string, roles)
@@ -83,7 +86,7 @@ function save_metadata_json( filename::String, complexity::Int, enable_polysemy:
         "num_sentences"   => num_sentences,
         "base_filename"   => base_filename,
         "alphabet"        => alphabet_as_strings,
-        "punctuation"     => punctuation_as_strings,
+        "punctuation"     => punctuation, #punctuation_as_strings,
         "roles"           => roles_as_strings,
         "roles_dict"      => roles_dict_as_strings,
         "grammar"         => grammar_as_strings,
@@ -115,7 +118,7 @@ function generate_sentence(
     ; 
     roles_dict::Dict{Symbol, Vector{String}},
     depth::Int = 0,
-    max_depth::Int = 15
+    max_depth::Int = 10 # TODO make global constant
 )
 
     if depth > max_depth # ? we've recursed too far, assume we won't find a terminal
@@ -231,10 +234,10 @@ function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_0
 
     alphabet = sample_alphabet(complexity)
     # TODO: use punctuation!?! or maybe not?...
-    punctuation = sample_punctuation(complexity) # ! use this 
+    punctuation = sample_punctuation(complexity) # ! use this ???
     vocabulary = sample_vocabulary(complexity, alphabet)
     roles = build_roles(complexity)
-    roles_dict = assign_roles_to_vocab(roles, vocabulary, enable_polysemy)
+    roles_dict = assign_roles_to_vocab(roles, vocabulary, punctuation, enable_polysemy)
     grammar = build_grammar(roles, roles_dict, complexity)
 
     meta_filename = base_filename * "_metadata.json"

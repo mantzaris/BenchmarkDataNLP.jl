@@ -15,9 +15,9 @@ const min_vocabulary_size = 10
 const vocabulary_size_complexity_100 = 10_000
 
 const min_role_size = 2
-const role_size_complexity_100 = 50
+const role_size_complexity_100 = 100
 const min_expansion_size = 1
-const expansion_size_complexity_100 = 20
+const expansion_size_complexity_100 = 10
 
 function sample_alphabet(complexity::Int)
     char_number = round(Int, linear_extrapolate(complexity, min_alphabet_size, alphabet_size_complexity_100; cmin=1, cmid=100))    
@@ -26,7 +26,16 @@ end
 
 function sample_punctuation(complexity::Int)
     char_number = round(Int, linear_extrapolate(complexity, min_punctuation_size, punctuation_size_complexity_100; cmin=1, cmid=100))
-    return Char.( punctuation_unicode_start_ind:punctuation_unicode_start_ind+char_number-1 )
+    
+    punctuation_chars = punctuation_unicode_start_ind : punctuation_unicode_start_ind + char_number - 1
+    punctuation_strings = String[]
+    for code in punctuation_chars
+        c = Char(code) #eg Char(256) => 'Ā'
+        push!(punctuation_strings, string(c)) #eg string('Ā') => "Ā"
+    end
+
+    return punctuation_strings
+    # return Char.( punctuation_unicode_start_ind:punctuation_unicode_start_ind+char_number-1 )
 end
 
 function sample_vocabulary(complexity::Int, alphabet::Vector{Char})::Vector{String}
@@ -64,7 +73,8 @@ function build_roles(c::Int)
     return roles
 end
 
-function assign_roles_to_vocab(roles::Vector{Symbol}, vocab::Vector{String}, polysemy::Bool)
+function assign_roles_to_vocab(roles::Vector{Symbol}, vocab::Vector{String}, 
+                                punctuation::Vector{String}, polysemy::Bool)
     roles_dict = Dict{Symbol, Vector{String}}(r => String[] for r in roles)
     for word in vocab
         if polysemy
@@ -78,6 +88,14 @@ function assign_roles_to_vocab(roles::Vector{Symbol}, vocab::Vector{String}, pol
             push!(roles_dict[chosen], word)
         end
     end
+
+    #punctuation tokens into some roles
+    for r in roles
+        if rand() < 0.5
+            append!(roles_dict[r], punctuation)
+        end
+    end
+
     return roles_dict
 end
 
@@ -87,10 +105,10 @@ function generate_random_expansions_for_role(role::Symbol, roles::Vector{Symbol}
     expansions = Vector{Vector{Any}}()
     for i in 1:expansions_count
         
-        nitems = rand(2:6) # ? can make the expansions lover
+        nitems = rand(2:7) # ? can make the expansions lower
         expansion_i = Any[]
         for j in 1:nitems
-            if rand() < 0.8 && !isempty(roles_dict[role]) # ! increase probability for more quick terminal symbol
+            if rand() < 0.75 && !isempty(roles_dict[role]) # ! increase probability for more quick terminal symbol
                 # pick a word from this role's vocabulary subset, chance pick a terminal
                 push!(expansion_i, rand(roles_dict[role]))
             else
