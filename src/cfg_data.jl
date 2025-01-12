@@ -1,8 +1,98 @@
-include("utilities/cfg_parameters.jl")
+include("utilities/data_utilities.jl")
+
 using JSON
 
 # TODO: bring in all the functions to keep it in a single file
 
+const alphabet_unicode_start_ind = 44032 #0xAC00 HANGUL_START = 0xAC00
+const min_alphabet_size = 5
+const alphabet_size_complexity_100 = 50
+
+const punctuation_unicode_start_ind = 256 #Latin Extended-A block, 0x0100 256 in decimal
+const min_punctuation_size = 1
+const punctuation_size_complexity_100 = 10
+
+const min_word_size = 5
+const word_size_complexity_100 = 20
+
+const min_vocabulary_size = 10
+const vocabulary_size_complexity_100 = 10_000
+
+const min_role_size = 2
+const role_size_complexity_100 = 100
+const min_expansion_size = 1
+const expansion_size_complexity_100 = 10
+
+
+
+
+
+function assign_roles_to_vocab(roles::Vector{Symbol}, vocab::Vector{String}, 
+                                punctuation::Vector{String}, polysemy::Bool)
+    roles_dict = Dict{Symbol, Vector{String}}(r => String[] for r in roles)
+    for word in vocab
+        if polysemy
+            # * the word appears in multiple roles, e.g., 1 or 2 roles, generalize more
+            chosen = sample(roles, rand([1,2]); replace=false)
+            for r in chosen
+                push!(roles_dict[r], word)
+            end
+        else
+            chosen = rand(roles)
+            push!(roles_dict[chosen], word)
+        end
+    end
+
+    #punctuation tokens into some roles
+    for r in roles
+    if rand() < 0.5
+    append!(roles_dict[r], punctuation)
+    end
+    end
+
+    return roles_dict
+end
+
+
+
+function expansions_per_role(c::Int)::Int
+    val = linear_extrapolate(c, min_expansion_size, expansion_size_complexity_100; cmin=1, cmid=100)
+    return floor(Int, val)
+end
+
+
+function generate_random_expansions_for_role(role::Symbol, roles::Vector{Symbol},
+    roles_dict::Dict{Symbol, Vector{String}}, 
+    expansions_count::Int)::Vector{Vector{Any}}
+
+    expansions = Vector{Vector{Any}}()
+    for i in 1:expansions_count
+
+        nitems = rand(2:7) # TODO make global constants
+        expansion_i = Any[]
+        for j in 1:nitems
+            if rand() < 0.75 && !isempty(roles_dict[role]) # ! increase probability for more quick terminal symbol
+            # pick a word from this role's vocabulary subset, chance pick a terminal
+            push!(expansion_i, rand(roles_dict[role]))
+        else
+            # reference some other role
+            push!(expansion_i, rand(roles))
+            end
+        end
+        push!(expansions, expansion_i)
+    end
+    return expansions
+end
+
+function build_grammar(roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{String}}, c::Int)
+    expansions_count = expansions_per_role(c)
+    grammar = Dict{Symbol, Vector{Vector{Any}}}()
+    for r in roles
+        expansions_for_r = generate_random_expansions_for_role(r, roles, roles_dict, expansions_count)
+        grammar[r] = expansions_for_r
+    end
+    return grammar
+end
 
 """
     save_metadata_json(
@@ -194,6 +284,20 @@ function produce_corpus_lines(
     @info "Wrote $num_sentences lines to $outfilename"
 end
 
+
+function num_roles(c::Int)::Int
+    val = linear_extrapolate(c, min_role_size, role_size_complexity_100; cmin=1, cmid=100)
+    return floor(Int, val)
+end
+
+
+function build_roles(c::Int)
+    nr = num_roles(c)
+    roles = [Symbol("Role$i") for i in 1:nr]
+    return roles
+end
+
+
 """
 generate_corpus_CFG(; 
     complexity::Int = 100, 
@@ -232,10 +336,9 @@ function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_0
         error("Complexity must be >= 1 and <= 1000")
     end
 
-    alphabet = sample_alphabet(complexity)
-    # TODO: use punctuation!?! or maybe not?...
-    punctuation = sample_punctuation(complexity) # ! use this ???
-    vocabulary = sample_vocabulary(complexity, alphabet)
+    alphabet = sample_alphabet(complexity,alphabet_unicode_start_ind,min_alphabet_size,alphabet_size_complexity_100)
+    punctuation = sample_punctuation(complexity,punctuation_unicode_start_ind,min_punctuation_size,punctuation_size_complexity_100)
+    vocabulary = sample_vocabulary(complexity, alphabet,min_vocabulary_size,vocabulary_size_complexity_100,min_word_size,word_size_complexity_100)
     roles = build_roles(complexity)
     roles_dict = assign_roles_to_vocab(roles, vocabulary, punctuation, enable_polysemy)
     grammar = build_grammar(roles, roles_dict, complexity)

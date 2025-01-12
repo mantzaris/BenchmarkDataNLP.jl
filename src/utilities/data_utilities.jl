@@ -1,3 +1,49 @@
+
+
+function sample_alphabet(complexity::Int,alphabet_unicode_start_ind::Int,min_alphabet_size::Int,alphabet_size_complexity_100::Int)
+    char_number = round(Int, linear_extrapolate(complexity, min_alphabet_size, alphabet_size_complexity_100; cmin=1, cmid=100))
+    return Char.( alphabet_unicode_start_ind:alphabet_unicode_start_ind+char_number-1 )
+end
+
+function sample_punctuation(complexity::Int,punctuation_unicode_start_ind::Int,min_punctuation_size::Int,punctuation_size_complexity_100::Int)
+    char_number = round(Int, linear_extrapolate(complexity, min_punctuation_size, punctuation_size_complexity_100; cmin=1, cmid=100))
+    
+    punctuation_chars = punctuation_unicode_start_ind : punctuation_unicode_start_ind + char_number - 1
+    punctuation_strings = String[]
+    for code in punctuation_chars
+        c = Char(code) #eg Char(256) => 'Ā'
+        push!(punctuation_strings, string(c)) #eg string('Ā') => "Ā"
+    end
+
+    return punctuation_strings
+    # return Char.( punctuation_unicode_start_ind:punctuation_unicode_start_ind+char_number-1 )
+end
+
+function sample_vocabulary(complexity::Int, 
+                            alphabet::Vector{Char},
+                            min_vocabulary_size::Int,
+                            vocabulary_size_complexity_100::Int,
+                            min_word_size::Int,
+                            word_size_complexity_100::Int)::Vector{String}
+    vocabulary_size = round(Int, linear_extrapolate(complexity, min_vocabulary_size, vocabulary_size_complexity_100; cmin=1, cmid=100))
+    max_word_size = round(Int, linear_extrapolate(complexity, min_word_size, word_size_complexity_100; cmin=1, cmid=100))
+
+    words = Vector{String}(undef, vocabulary_size)
+
+    # * ensure in future that words are unique
+    # * distribution on word size
+    for i in 1:vocabulary_size
+        wlen = rand(1:max_word_size)
+        # sample wlen chars from the alphabet
+        wchars = rand(alphabet, wlen)
+        words[i] = join(wchars)
+    end
+
+    return words
+end
+
+
+
 function linear_extrapolate(c::Int, vmin::Real, vmax::Real; 
                                 cmin::Int=1, cmid::Int=100)
 
