@@ -61,6 +61,7 @@ end
 
 
 
+# TODO is this still needed?
 function try_to_get_integer(variable_value)
     try
         if variable_value isa Integer

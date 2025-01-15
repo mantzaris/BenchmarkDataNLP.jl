@@ -2,7 +2,6 @@ include("utilities/data_utilities.jl")
 
 using JSON
 
-# TODO: bring in all the functions to keep it in a single file
 
 const alphabet_unicode_start_ind = 44032 #0xAC00 HANGUL_START = 0xAC00
 const min_alphabet_size = 5
@@ -22,8 +21,10 @@ const min_role_size = 2
 const role_size_complexity_100 = 100
 const min_expansion_size = 1
 const expansion_size_complexity_100 = 10
+const expansion_nitem_min = 2
+const expansion_nitem_max = 6
 
-
+const sentence_recursion_max_depth = 8
 
 
 
@@ -68,10 +69,10 @@ function generate_random_expansions_for_role(role::Symbol, roles::Vector{Symbol}
     expansions = Vector{Vector{Any}}()
     for i in 1:expansions_count
 
-        nitems = rand(2:7) # TODO make global constants
+        nitems = rand(expansion_nitem_min:expansion_nitem_max)
         expansion_i = Any[]
         for j in 1:nitems
-            if rand() < 0.75 && !isempty(roles_dict[role]) # ! increase probability for more quick terminal symbol
+            if rand() < 0.8 && !isempty(roles_dict[role]) # ! increase probability for more quick terminal symbol
             # pick a word from this role's vocabulary subset, chance pick a terminal
             push!(expansion_i, rand(roles_dict[role]))
         else
@@ -184,8 +185,6 @@ function save_metadata_json( filename::String, complexity::Int, enable_polysemy:
     )
 
     open(filename, "w") do io
-        json_str = JSON.json(metadata)
-        print(io, json_str)
         JSON.print(io, metadata)
     end
     @info "Saved metadata to $filename"
@@ -208,7 +207,7 @@ function generate_sentence(
     ; 
     roles_dict::Dict{Symbol, Vector{String}},
     depth::Int = 0,
-    max_depth::Int = 10 # TODO make global constant
+    max_depth::Int = sentence_recursion_max_depth
 )
 
     if depth > max_depth # ? we've recursed too far, assume we won't find a terminal
@@ -265,23 +264,36 @@ function produce_corpus_lines(
     num_sentences::Int,
     base_filename::String
 )
-
-    lines = Vector{String}(undef, num_sentences)
-
-    for i in 1:num_sentences
+    total_lines = num_sentences    
+    lines = Vector{String}(undef, total_lines)
+    
+    for i in 1:total_lines
         local_start = rand(roles)
         lines[i] = generate_sentence(local_start, grammar; roles_dict=roles_dict)
     end
 
-    # TODO make this 3 times for training / testing /validation
-    outfilename = base_filename * ".jsonl"
-    open(outfilename, "w") do io
+    shuffle!(lines)
+
+    train_count = Int(floor(0.8 * total_lines))
+    test_count = Int(floor(0.1 * total_lines))
+    val_count = total_lines - train_count - test_count
+
+    train_lines = lines[1:train_count]
+    test_lines  = lines[train_count+1 : train_count+test_count]
+    val_lines   = lines[train_count+test_count+1 : end]
+
+    write_jsonl(train_lines, base_filename * "_training.jsonl")
+    write_jsonl(test_lines, base_filename * "_testing.jsonl")
+    write_jsonl(val_lines, base_filename * "_validation.jsonl")
+end
+
+function write_jsonl(lines::Vector{String}, filename::String)
+    open(filename, "w") do io
         for line in lines
             write(io, "{\"text\": \"$line\"}\n")
         end
     end
-
-    @info "Wrote $num_sentences lines to $outfilename"
+    @info "Wrote $(length(lines)) lines to $filename"
 end
 
 
