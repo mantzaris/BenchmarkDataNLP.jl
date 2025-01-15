@@ -1,6 +1,7 @@
 include("utilities/data_utilities.jl")
 
 using JSON
+using StatsBase
 
 
 const alphabet_unicode_start_ind = 44032 #0xAC00 HANGUL_START = 0xAC00
