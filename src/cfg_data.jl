@@ -1,6 +1,9 @@
 include("utilities/data_utilities.jl")
 
+#TODO test for cycles in grammar roles
+
 using JSON
+using StatsBase
 
 
 const alphabet_unicode_start_ind = 44032 #0xAC00 HANGUL_START = 0xAC00
@@ -28,7 +31,7 @@ const sentence_recursion_max_depth = 8
 
 
 
-function assign_roles_to_vocab(roles::Vector{Symbol}, vocab::Vector{String}, 
+function assign_roles_to_vocab_CFG(roles::Vector{Symbol}, vocab::Vector{String}, 
                                 punctuation::Vector{String}, polysemy::Bool)
     roles_dict = Dict{Symbol, Vector{String}}(r => String[] for r in roles)
     for word in vocab
@@ -56,13 +59,13 @@ end
 
 
 
-function expansions_per_role(c::Int)::Int
+function expansions_per_role_CFG(c::Int)::Int
     val = linear_extrapolate(c, min_expansion_size, expansion_size_complexity_100; cmin=1, cmid=100)
     return floor(Int, val)
 end
 
 
-function generate_random_expansions_for_role(role::Symbol, roles::Vector{Symbol},
+function generate_random_expansions_for_role_CFG(role::Symbol, roles::Vector{Symbol},
     roles_dict::Dict{Symbol, Vector{String}}, 
     expansions_count::Int)::Vector{Vector{Any}}
 
@@ -85,18 +88,18 @@ function generate_random_expansions_for_role(role::Symbol, roles::Vector{Symbol}
     return expansions
 end
 
-function build_grammar(roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{String}}, c::Int)
-    expansions_count = expansions_per_role(c)
+function build_grammar_CFG(roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{String}}, c::Int)
+    expansions_count = expansions_per_role_CFG(c)
     grammar = Dict{Symbol, Vector{Vector{Any}}}()
     for r in roles
-        expansions_for_r = generate_random_expansions_for_role(r, roles, roles_dict, expansions_count)
+        expansions_for_r = generate_random_expansions_for_role_CFG(r, roles, roles_dict, expansions_count)
         grammar[r] = expansions_for_r
     end
     return grammar
 end
 
 """
-    save_metadata_json(
+    save_metadata_json_CFG(
         filename::String,
         complexity::Int,
         enable_polysemy::Bool,
@@ -119,7 +122,7 @@ single .json file named `filename`.
 Example usage:
 ```julia
 # after building everything:
-save_metadata_json(
+save_metadata_json_CFG(
     "MyMetadata.json",
     complexity,
     enable_polysemy,
@@ -134,7 +137,7 @@ save_metadata_json(
 )
 
 """
-function save_metadata_json( filename::String, complexity::Int, enable_polysemy::Bool, num_sentences::Int,
+function save_metadata_json_CFG( filename::String, complexity::Int, enable_polysemy::Bool, num_sentences::Int,
                                 base_filename::String, alphabet::Vector{Char}, punctuation::Vector{String},
                                 vocabulary::Vector{String}, roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{String}},
                                 grammar::Dict{Symbol, Vector{Vector{Any}}} )
@@ -192,7 +195,7 @@ function save_metadata_json( filename::String, complexity::Int, enable_polysemy:
 end
 
 """
-    generate_sentence(start_role::Symbol, grammar::Dict{Symbol, Vector{Vector{Any}}};
+    generate_sentence_CFG(start_role::Symbol, grammar::Dict{Symbol, Vector{Vector{Any}}};
                     roles_dict::Dict{Symbol, Vector{String}})
 Generate a single line from the grammar by recursively expanding `start_role`.
 - If `start_role` has expansions in `grammar`, pick one at random and expand each item.
@@ -201,7 +204,7 @@ Generate a single line from the grammar by recursively expanding `start_role`.
 
 This approach can produce short or long lines depending on the expansions.
 """
-function generate_sentence(
+function generate_sentence_CFG(
     start_role::Symbol,
     grammar::Dict{Symbol, Vector{Vector{Any}}},
     ; 
@@ -229,7 +232,7 @@ function generate_sentence(
         parts = String[]
         for item in chosen_expansion
             if item isa Symbol
-                push!(parts, generate_sentence(item, grammar; roles_dict=roles_dict, depth=depth+1, max_depth=max_depth))
+                push!(parts, generate_sentence_CFG(item, grammar; roles_dict=roles_dict, depth=depth+1, max_depth=max_depth))
             elseif item isa String
                 push!(parts, item)
             else
@@ -242,7 +245,7 @@ end
 
 
 """
-    produce_corpus_lines(
+    produce_corpus_lines_CFG(
         grammar::Dict{Symbol, Vector{Vector{Any}}},
         roles_dict::Dict{Symbol, Vector{String}},
         roles::Vector{Symbol},
@@ -257,7 +260,7 @@ By default, it uses the *first* role in `roles` as the start symbol for
 all lines. If you'd like to pick a random start role each time, replace the
 `start_role = first(roles)` logic accordingly.
 """
-function produce_corpus_lines(
+function produce_corpus_lines_CFG(
     grammar::Dict{Symbol, Vector{Vector{Any}}},
     roles_dict::Dict{Symbol, Vector{String}},
     roles::Vector{Symbol},
@@ -269,7 +272,7 @@ function produce_corpus_lines(
     
     for i in 1:total_lines
         local_start = rand(roles)
-        lines[i] = generate_sentence(local_start, grammar; roles_dict=roles_dict)
+        lines[i] = generate_sentence_CFG(local_start, grammar; roles_dict=roles_dict)
     end
 
     shuffle!(lines)
@@ -282,12 +285,12 @@ function produce_corpus_lines(
     test_lines  = lines[train_count+1 : train_count+test_count]
     val_lines   = lines[train_count+test_count+1 : end]
 
-    write_jsonl(train_lines, base_filename * "_training.jsonl")
-    write_jsonl(test_lines, base_filename * "_testing.jsonl")
-    write_jsonl(val_lines, base_filename * "_validation.jsonl")
+    write_jsonl_CFG(train_lines, base_filename * "_training.jsonl")
+    write_jsonl_CFG(test_lines, base_filename * "_testing.jsonl")
+    write_jsonl_CFG(val_lines, base_filename * "_validation.jsonl")
 end
 
-function write_jsonl(lines::Vector{String}, filename::String)
+function write_jsonl_CFG(lines::Vector{String}, filename::String)
     open(filename, "w") do io
         for line in lines
             write(io, "{\"text\": \"$line\"}\n")
@@ -297,14 +300,14 @@ function write_jsonl(lines::Vector{String}, filename::String)
 end
 
 
-function num_roles(c::Int)::Int
+function num_roles_CFG(c::Int)::Int
     val = linear_extrapolate(c, min_role_size, role_size_complexity_100; cmin=1, cmid=100)
     return floor(Int, val)
 end
 
 
-function build_roles(c::Int)
-    nr = num_roles(c)
+function build_roles_CFG(c::Int)
+    nr = num_roles_CFG(c)
     roles = [Symbol("Role$i") for i in 1:nr]
     return roles
 end
@@ -351,12 +354,12 @@ function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_0
     alphabet = sample_alphabet(complexity,alphabet_unicode_start_ind,min_alphabet_size,alphabet_size_complexity_100)
     punctuation = sample_punctuation(complexity,punctuation_unicode_start_ind,min_punctuation_size,punctuation_size_complexity_100)
     vocabulary = sample_vocabulary(complexity, alphabet,min_vocabulary_size,vocabulary_size_complexity_100,min_word_size,word_size_complexity_100)
-    roles = build_roles(complexity)
-    roles_dict = assign_roles_to_vocab(roles, vocabulary, punctuation, enable_polysemy)
-    grammar = build_grammar(roles, roles_dict, complexity)
+    roles = build_roles_CFG(complexity)
+    roles_dict = assign_roles_to_vocab_CFG(roles, vocabulary, punctuation, enable_polysemy)
+    grammar = build_grammar_CFG(roles, roles_dict, complexity)
 
     meta_filename = base_filename * "_metadata.json"
-    save_metadata_json(
+    save_metadata_json_CFG(
         meta_filename,
         complexity,
         enable_polysemy,
@@ -370,6 +373,6 @@ function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_0
         grammar
     )
 
-    produce_corpus_lines(grammar, roles_dict, roles, num_sentences, base_filename)
+    produce_corpus_lines_CFG(grammar, roles_dict, roles, num_sentences, base_filename)
     return nothing
 end

@@ -5,7 +5,7 @@ module BenchmarkDataNLP
 
     include("cfg_data.jl")
 
-    export generate_corpus_CFG, greet, generate_dataset
+    export generate_corpus_CFG, greet
 
 
     
