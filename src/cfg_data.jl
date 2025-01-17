@@ -299,6 +299,7 @@ Generate a synthetic corpus of context-free grammar–based text data.
 - `num_sentences`: The total number of text samples (e.g., lines or sentences) to generate.
 - `enable_polysemy`: If `true`, allows words to overlap multiple roles or subroles, introducing 
 lexical ambiguity in the generated corpus.
+- `output_dir`: The path for the files to be saved to.
 - `base_filename`: Base name for the output files; the function will typically create files 
 like `base_filename_training.jsonl`, `base_filename_validation.jsonl`, and 
 `base_filename_test.jsonl` depending on how you implement data splitting.
@@ -311,11 +312,13 @@ generate_corpus_CFG(
     complexity       = 100,
     num_sentences    = 100_000,
     enable_polysemy  = false,
+    output_dir       = "/home/user/Documents"
     base_filename    = "MyDataset"
 )
 """
 function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_000, 
-                                enable_polysemy::Bool = false, base_filename::AbstractString = "CFG_Corpus" )
+                                enable_polysemy::Bool = false, 
+                                output_dir::AbstractString = ".", base_filename::AbstractString = "CFG_Corpus" )
 
     if complexity <= 0 || complexity > 1000
         error("Complexity must be >= 1 and <= 1000")
@@ -328,13 +331,15 @@ function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_0
     roles_dict = assign_roles_to_vocab_CFG(roles, vocabulary, punctuation, enable_polysemy)
     grammar = build_grammar_CFG(roles, roles_dict, complexity)
 
-    meta_filename = base_filename * "_metadata.json"
+    outpath_base = joinpath(output_dir, base_filename)
+
+    meta_filename = outpath_base * "_metadata.json"
     save_metadata_json_CFG(
         meta_filename,
         complexity,
         enable_polysemy,
         num_sentences,
-        base_filename,
+        outpath_base,
         alphabet,
         punctuation,
         vocabulary,
@@ -343,6 +348,6 @@ function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_0
         grammar
     )
 
-    produce_corpus_lines_CFG(grammar, roles_dict, roles, num_sentences, base_filename)
+    produce_corpus_lines_CFG(grammar, roles_dict, roles, num_sentences, outpath_base)
     return nothing
 end
