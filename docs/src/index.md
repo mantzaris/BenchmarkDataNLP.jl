@@ -38,7 +38,7 @@ generate_corpus_CFG(
     complexity       = 100,           # Controls grammar, vocab size, etc.
     num_sentences    = 100_000,       # Number of text samples (lines) to generate for each file of training/testing/validation
     enable_polysemy  = false,         # Toggle overlap of words among multiple roles
-    base_filename    = "MyDataset",   # Base name for output files of .jsonl format
+    base_filename    = "MyDataset",   # Base name for output files of .jsonl format (training/testing/validation files of 80%/10%/10% are produced)
     )
 ```
 

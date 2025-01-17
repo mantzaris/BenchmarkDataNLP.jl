@@ -5,3 +5,11 @@ Pkg.add("Revise")
 using Revise
 using BenchmarkDataNLP
 generate_corpus_CFG(complexity=20, num_sentences=100, enable_polysemy=false, base_filename="TestOutput")
+
+
+
+# for the docs
+.../repos/BenchmarkDataNLP.jl$ julia --project=. -e 'using Pkg; Pkg.resolve(); Pkg.instantiate()'
+  No Changes to `~/Documents/repos/BenchmarkDataNLP.jl/Project.toml`
+  No Changes to `~/Documents/repos/BenchmarkDataNLP.jl/Manifest.toml`
+.../repos/BenchmarkDataNLP.jl$ julia --project=. docs/make.jl

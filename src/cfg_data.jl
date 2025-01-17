@@ -98,45 +98,29 @@ function build_grammar_CFG(roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vecto
     return grammar
 end
 
-"""
-    save_metadata_json_CFG(
-        filename::String,
-        complexity::Int,
-        enable_polysemy::Bool,
-        num_sentences::Int,
-        base_filename::String,
-        alphabet::Vector{Char},
-        punctuation::Vector{Char},
-        vocabulary::Vector{String},
-        roles::Vector{Symbol},
-        roles_dict::Dict{Symbol, Vector{String}},
-        grammar::Dict{Symbol, Vector{Vector{Any}}}
-    )
 
-Serialize the synthetic CFG 'metadata' used to produce corpus lines into a 
-single .json file named `filename`.
+# Serialize the synthetic CFG 'metadata' used to produce corpus lines into a 
+# single .json file named `filename`.
 
-- Converts all `Symbol` keys/items to `String`.
-- Stores a variety of fields: complexity, polysemy, number of sentences, etc.
+# - Converts all `Symbol` keys/items to `String`.
+# - Stores a variety of fields: complexity, polysemy, number of sentences, etc.
 
-Example usage:
-```julia
-# after building everything:
-save_metadata_json_CFG(
-    "MyMetadata.json",
-    complexity,
-    enable_polysemy,
-    num_sentences,
-    base_filename,
-    alphabet,
-    punctuation,
-    vocabulary,
-    roles,
-    roles_dict,
-    grammar
-)
-
-"""
+# Example usage:
+# ```julia
+# # after building everything:
+# save_metadata_json_CFG(
+#     "MyMetadata.json",
+#     complexity,
+#     enable_polysemy,
+#     num_sentences,
+#     base_filename,
+#     alphabet,
+#     punctuation,
+#     vocabulary,
+#     roles,
+#     roles_dict,
+#     grammar
+# )
 function save_metadata_json_CFG( filename::String, complexity::Int, enable_polysemy::Bool, num_sentences::Int,
                                 base_filename::String, alphabet::Vector{Char}, punctuation::Vector{String},
                                 vocabulary::Vector{String}, roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{String}},
@@ -194,16 +178,13 @@ function save_metadata_json_CFG( filename::String, complexity::Int, enable_polys
 
 end
 
-"""
-    generate_sentence_CFG(start_role::Symbol, grammar::Dict{Symbol, Vector{Vector{Any}}};
-                    roles_dict::Dict{Symbol, Vector{String}})
-Generate a single line from the grammar by recursively expanding `start_role`.
-- If `start_role` has expansions in `grammar`, pick one at random and expand each item.
-- If `start_role` is not in `grammar`, try picking a word from `roles_dict[start_role]`.
-- If that's empty, return an empty string.
 
-This approach can produce short or long lines depending on the expansions.
-"""
+# Generate a single line from the grammar by recursively expanding `start_role`.
+# - If `start_role` has expansions in `grammar`, pick one at random and expand each item.
+# - If `start_role` is not in `grammar`, try picking a word from `roles_dict[start_role]`.
+# - If that's empty, return an empty string.
+
+# This approach can produce short or long lines depending on the expansions.
 function generate_sentence_CFG(
     start_role::Symbol,
     grammar::Dict{Symbol, Vector{Vector{Any}}},
@@ -244,22 +225,11 @@ function generate_sentence_CFG(
 end
 
 
-"""
-    produce_corpus_lines_CFG(
-        grammar::Dict{Symbol, Vector{Vector{Any}}},
-        roles_dict::Dict{Symbol, Vector{String}},
-        roles::Vector{Symbol},
-        num_sentences::Int,
-        base_filename::String
-    )
+#Generate `num_sentences` lines from the given grammar. The lines are saved into a `.jsonl` file named `base_filename * ".jsonl"`.
+# By default, it uses the *first* role in `roles` as the start symbol for
+# all lines. If you'd like to pick a random start role each time, replace the
+# `start_role = first(roles)` logic accordingly.
 
-Generate `num_sentences` lines from the given grammar. The lines are saved
-into a `.jsonl` file named `base_filename * ".jsonl"`.
-
-By default, it uses the *first* role in `roles` as the start symbol for
-all lines. If you'd like to pick a random start role each time, replace the
-`start_role = first(roles)` logic accordingly.
-"""
 function produce_corpus_lines_CFG(
     grammar::Dict{Symbol, Vector{Vector{Any}}},
     roles_dict::Dict{Symbol, Vector{String}},
