@@ -288,6 +288,7 @@ generate_corpus_CFG(;
     complexity::Int = 100, 
     num_sentences::Int = 100_000, 
     enable_polysemy::Bool = false, 
+    output_dir::AbstractString = "."
     base_filename::AbstractString = "MyDataset"
 )
 
