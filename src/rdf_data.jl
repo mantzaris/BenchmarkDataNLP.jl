@@ -239,8 +239,75 @@ function produce_lines_no_context(store::Vector{Triple}, num_lines::Int;
 end
 
 
-# TODO: put doc string!!!!
-# ! DOC STRING!
+
+
+"""
+    generate_rdf_corpus(
+        complexity::Int,
+        num_paragraphs::Int;
+        output_dir::String=".",
+        base_name::String="MyRDF",
+        filler_ratio::Float64=0.0,
+        max_filler::Int=0,
+        use_context::Bool=false
+    ) -> Nothing
+
+Generate a synthetic RDF-based text corpus and automatically split it into 
+training, testing, and validation sets. The corpus is saved as `.jsonl` files.
+
+# Arguments
+- `complexity::Int`: Controls the scale of the generated vocabulary and triple store. Higher complexity leads 
+to a larger vocabulary, more subjects/predicates/objects, and potentially a higher number of triples.
+- `num_paragraphs::Int`: The total number of lines (or “paragraphs” if `use_context=true`) to 
+produce in the final corpus.
+- `output_dir::String`: Directory where output files will be saved (`"."` by default).
+- `base_name::String`: Base name for the output files. The function will produce three files named 
+`<base_name>_train.jsonl`, `<base_name>_test.jsonl`, and `<base_name>_val.jsonl`.
+- `filler_ratio::Float64`: Fraction of the vocabulary leftover (after allocating subjects, predicates, 
+and objects) that is used for filler tokens. For example, a value of `0.3` means 30% of the leftover words become filler tokens. 
+    A higher ratio produces more distinct filler words you can insert in generated sentences. 
+    If this is `0.0`, no extra tokens are dedicated to filler.
+- `max_filler::Int`: The maximum number of filler tokens inserted around each subject, 
+predicate, or object in a generated sentence. For example, if `max_filler=2`, then up to 
+two randomly chosen filler tokens might appear before the subject, between subject and 
+predicate, or between predicate and object.
+- `use_context::Bool`: If true, generates multi-sentence paragraphs reusing previously 
+mentioned entities (subject/object) within each paragraph, introducing some “context.” 
+Otherwise, each line is just a single triple-based sentence with no continuity.
+
+# Description
+1. **Vocabulary & Triple Store**: Based on `complexity`, the function creates a master vocabulary 
+and partitions it into subjects, predicates, objects, and (optionally) filler. A random subset 
+of (subject, predicate, object) combinations is then chosen to form a finite triple store.
+
+2. **Text Generation**:
+  - If `use_context=false`, each line is a single sentence referencing a randomly picked triple, 
+optionally inserting up to `max_filler` filler tokens around the subject/predicate/object.
+  - If `use_context=true`, the function produces multi-sentence paragraphs, where each paragraph 
+attempts to reuse entities mentioned in prior sentences for added context.
+
+3. **Output**:
+  - The resulting lines or paragraphs are shuffled and split into training (80%), testing (10%), 
+and validation (10%) sets.
+  - Saved as JSON lines in files named `<base_name>_train.jsonl`, `<base_name>_test.jsonl`, 
+and `<base_name>_val.jsonl` within `output_dir`.
+
+# Returns
+Nothing. The synthetic corpus is written to disk in JSONL format.
+
+# Example
+
+```julia
+generate_rdf_corpus(
+    50,
+    1_000;
+    output_dir = ".",
+    base_name = "MyRDF",
+    filler_ratio = 0.2,
+    max_filler = 2,
+    use_context = true
+)
+"""
 function generate_rdf_corpus(complexity::Int, num_paragraphs::Int; output_dir::String=".",
                                 base_name::String="MyRDF", filler_ratio::Float64=0.0,
                                 max_filler::Int=0, use_context::Bool=false)
@@ -267,7 +334,7 @@ end
 
 # generate_rdf_corpus(
 #     10,            # complexity
-#     100,          # produce 1,000 lines or paragraphs
+#     100,          # produce 1000 lines or paragraphs
 #     output_dir=".",
 #     base_name="RDF_Simple",
 #     filler_ratio=0.2,
