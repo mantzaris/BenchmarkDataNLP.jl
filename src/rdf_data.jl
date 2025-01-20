@@ -1,7 +1,6 @@
-include("utilities/data_utilities.jl")
 # Consistent Knowledge Graph, Pre-Build a Triple Store
 
-
+using JSON
 using Random
 using StatsBase
 
@@ -212,7 +211,6 @@ end
 
 
 function split_and_write_jsonl(lines::Vector{String}, basename::String)
-    using StatsBase: shuffle!
     shuffle!(lines)
 
     tot = length(lines)
@@ -241,6 +239,8 @@ function produce_lines_no_context(store::Vector{Triple}, num_lines::Int;
 end
 
 
+# TODO: put doc string!!!!
+# ! DOC STRING!
 function generate_rdf_corpus(complexity::Int, num_paragraphs::Int; output_dir::String=".",
                                 base_name::String="MyRDF", filler_ratio::Float64=0.0,
                                 max_filler::Int=0, use_context::Bool=false)

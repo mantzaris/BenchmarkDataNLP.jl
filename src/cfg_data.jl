@@ -1,4 +1,3 @@
-include("utilities/data_utilities.jl")
 
 #TODO test for cycles in grammar roles
 

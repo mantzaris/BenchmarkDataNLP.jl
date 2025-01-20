@@ -3,6 +3,7 @@ module BenchmarkDataNLP
     using Random
     using JSON
 
+    include("utilities/data_utilities.jl")
     include("cfg_data.jl")
     include("rdf_data.jl") 
 
