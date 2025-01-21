@@ -1,11 +1,15 @@
 
 
-function sample_alphabet(complexity::Int,alphabet_unicode_start_ind::Int,min_alphabet_size::Int,alphabet_size_complexity_100::Int)
+function sample_alphabet(complexity::Int,alphabet_unicode_start_ind::Int,
+                                    min_alphabet_size::Int,
+                                    alphabet_size_complexity_100::Int)
     char_number = round(Int, linear_extrapolate(complexity, min_alphabet_size, alphabet_size_complexity_100; cmin=1, cmid=100))
     return Char.( alphabet_unicode_start_ind:alphabet_unicode_start_ind+char_number-1 )
 end
 
-function sample_punctuation(complexity::Int,punctuation_unicode_start_ind::Int,min_punctuation_size::Int,punctuation_size_complexity_100::Int)
+function sample_punctuation(complexity::Int,punctuation_unicode_start_ind::Int,
+                                    min_punctuation_size::Int, 
+                                    punctuation_size_complexity_100::Int)
     char_number = round(Int, linear_extrapolate(complexity, min_punctuation_size, punctuation_size_complexity_100; cmin=1, cmid=100))
     
     punctuation_chars = punctuation_unicode_start_ind : punctuation_unicode_start_ind + char_number - 1
@@ -44,8 +48,6 @@ end
 
 
 
-
-
 function linear_extrapolate(c::Int, vmin::Real, vmax::Real; 
                                 cmin::Int=1, cmid::Int=100)
 
@@ -63,7 +65,6 @@ end
 
 
 
-# TODO is this still needed?
 function try_to_get_integer(variable_value)
     try
         if variable_value isa Integer

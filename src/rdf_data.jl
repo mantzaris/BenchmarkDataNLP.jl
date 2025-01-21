@@ -264,8 +264,8 @@ produce in the final corpus.
 - `base_name::String`: Base name for the output files. The function will produce three files named 
 `<base_name>_train.jsonl`, `<base_name>_test.jsonl`, and `<base_name>_val.jsonl`.
 - `filler_ratio::Float64`: Fraction of the vocabulary leftover (after allocating subjects, predicates, 
-and objects) that is used for filler tokens. For example, a value of `0.3` means 30% of the leftover words become filler tokens. 
-    A higher ratio produces more distinct filler words you can insert in generated sentences. 
+and objects) that is used for filler tokens. For example, a value of `0.3` means 30% of the leftover words 
+    become filler tokens. A higher ratio produces more distinct filler words you can insert in generated sentences. 
     If this is `0.0`, no extra tokens are dedicated to filler.
 - `max_filler::Int`: The maximum number of filler tokens inserted around each subject, 
 predicate, or object in a generated sentence. For example, if `max_filler=2`, then up to 

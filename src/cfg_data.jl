@@ -98,8 +98,8 @@ function build_grammar_CFG(roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vecto
 end
 
 
-# Serialize the synthetic CFG 'metadata' used to produce corpus lines into a 
-# single .json file named `filename`.
+#Serialize the synthetic CFG 'metadata' used to produce corpus lines into a 
+#single .json file named `filename`.
 
 # - Converts all `Symbol` keys/items to `String`.
 # - Stores a variety of fields: complexity, polysemy, number of sentences, etc.
@@ -120,9 +120,12 @@ end
 #     roles_dict,
 #     grammar
 # )
-function save_metadata_json_CFG( filename::String, complexity::Int, enable_polysemy::Bool, num_sentences::Int,
-                                base_filename::String, alphabet::Vector{Char}, punctuation::Vector{String},
-                                vocabulary::Vector{String}, roles::Vector{Symbol}, roles_dict::Dict{Symbol, Vector{String}},
+function save_metadata_json_CFG( filename::String, complexity::Int, enable_polysemy::Bool, 
+                                num_sentences::Int,
+                                base_filename::String, alphabet::Vector{Char}, 
+                                punctuation::Vector{String},
+                                vocabulary::Vector{String}, roles::Vector{Symbol}, 
+                                roles_dict::Dict{Symbol, Vector{String}},
                                 grammar::Dict{Symbol, Vector{Vector{Any}}} )
 
     # 1) Convert `alphabet` and `punctuation` to strings or store them directly as array of chars.
@@ -283,13 +286,13 @@ end
 
 
 """
-generate_corpus_CFG(; 
-    complexity::Int = 100, 
-    num_sentences::Int = 100_000, 
-    enable_polysemy::Bool = false, 
-    output_dir::AbstractString = "."
-    base_filename::AbstractString = "MyDataset"
-)
+    generate_corpus_CFG(; 
+        complexity::Int = 100, 
+        num_sentences::Int = 100_000, 
+        enable_polysemy::Bool = false, 
+        output_dir::AbstractString = "."
+        base_filename::AbstractString = "MyDataset"
+    ) -> Nothing
 
 Generate a synthetic corpus of context-free grammar–based text data.
 
@@ -307,7 +310,6 @@ like `base_filename_training.jsonl`, `base_filename_validation.jsonl`, and
 # Usage
 
 ```julia
-# Example usage:
 generate_corpus_CFG(
     complexity       = 100,
     num_sentences    = 100_000,
@@ -316,9 +318,11 @@ generate_corpus_CFG(
     base_filename    = "MyDataset"
 )
 """
-function generate_corpus_CFG(; complexity::Int = 100, num_sentences::Int = 100_000, 
+function generate_corpus_CFG(; complexity::Int = 100, 
+                                num_sentences::Int = 100_000, 
                                 enable_polysemy::Bool = false, 
-                                output_dir::AbstractString = ".", base_filename::AbstractString = "CFG_Corpus" )
+                                output_dir::AbstractString = ".", 
+                                base_filename::AbstractString = "CFG_Corpus" )
 
     if complexity <= 0 || complexity > 1000
         error("Complexity must be >= 1 and <= 1000")
