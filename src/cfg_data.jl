@@ -286,37 +286,98 @@ end
 
 
 """
-    generate_corpus_CFG(; 
+    generate_corpus_CFG(
+        ; 
         complexity::Int = 100, 
         num_sentences::Int = 100_000, 
         enable_polysemy::Bool = false, 
-        output_dir::AbstractString = "."
-        base_filename::AbstractString = "MyDataset"
+        output_dir::AbstractString = ".", 
+        base_filename::AbstractString = "CFG_Corpus"
     ) -> Nothing
 
-Generate a synthetic corpus of context-free grammar–based text data.
+Generate a synthetic corpus of text using a randomly constructed Context-Free Grammar (CFG). 
+This function creates a vocabulary (including punctuation), assigns words to various grammar 
+roles, builds random expansions for each role, and then recursively expands a start role 
+to produce individual text lines. The corpus is randomly shuffled and split into 80% 
+training, 10% testing, and 10% validation `.jsonl` files. It also saves a metadata file 
+describing the generated grammar.
 
 # Arguments
-- `complexity`: Controls the grammar complexity, vocabulary size, and other parameters 
-(e.g., at complexity=100 you might have a 10K-word vocabulary, 200 grammar rules, etc.). After 100 the grammar expansions are less typical of human languages.
-- `num_sentences`: The total number of text samples (e.g., lines or sentences) to generate.
-- `enable_polysemy`: If `true`, allows words to overlap multiple roles or subroles, introducing 
-lexical ambiguity in the generated corpus.
-- `output_dir`: The path for the files to be saved to.
-- `base_filename`: Base name for the output files; the function will typically create files 
-like `base_filename_training.jsonl`, `base_filename_validation.jsonl`, and 
-`base_filename_test.jsonl` depending on how you implement data splitting.
 
-# Usage
+- `complexity::Int` (default = 100): Controls the overall size and complexity of the grammar 
+  and vocabulary. Higher values lead to more roles, more words, and larger expansions 
+  (potentially producing lengthier or more varied sentences). 
+  - **Range**: 1 ≤ `complexity` ≤ 1000.
+  - **Behavior**: 
+    - At lower values (≈1–10), the grammar is quite small.
+    - At or beyond 100, expansions can become extensive and less “natural.”
+
+- `num_sentences::Int` (default = 100_000): Total number of text lines (sentences) to generate.
+
+- `enable_polysemy::Bool` (default = `false`): If `true`, words may appear in multiple roles, 
+  introducing lexical ambiguity. If `false`, each word is assigned to exactly one role.
+
+- `output_dir::AbstractString` (default = `"."`): Directory path to which all output files 
+  (the corpus `.jsonl` files and metadata `.json`) are written.
+
+- `base_filename::AbstractString` (default = `"CFG_Corpus"`): Base name for output files. 
+  The function writes:
+  - `"<base_filename>_metadata.json"`: A JSON file describing the generated grammar, roles, etc.
+  - `"<base_filename>_training.jsonl"`, `"<base_filename>_testing.jsonl"`, and 
+    `"<base_filename>_validation.jsonl"`: The text corpus in JSON Lines format.
+
+# Description
+
+1. **Vocabulary & Punctuation**  
+   A base alphabet is sampled given the `complexity`. Then, punctuation tokens are added. 
+   Words are formed by combining characters from the alphabet (the size of the vocabulary 
+   also scales with `complexity`).
+
+2. **Role Creation**  
+   A set of grammar roles (e.g., `Role1`, `Role2`, ...) is generated. The number of roles 
+   grows with `complexity`. 
+
+3. **Role Assignment & Polysemy**  
+   - If `enable_polysemy=false`, each word is placed into exactly one role’s vocabulary.  
+   - If `enable_polysemy=true`, words may appear in multiple roles (e.g., “bat” might be 
+     assigned to both `Noun` and `Verb` roles).
+
+4. **Grammar Construction**  
+   - For each role, a number of random expansions is created (scaling with `complexity`).
+   - An expansion is a sequence of items, each of which may be another role (non-terminal) 
+     or a terminal word. 
+   - Recursion depth is limited (`sentence_recursion_max_depth`) to prevent infinite loops 
+     if the expansions reference one another excessively.
+
+5. **Sentence Generation**  
+   - Each of the `num_sentences` lines is produced by randomly choosing a start role, then 
+     recursively expanding it until only terminal words remain or the maximum recursion depth 
+     is reached. 
+   - The resulting tokens are joined into a single line of text.
+
+6. **Output**  
+   - The generated lines are shuffled and split into train (80%), test (10%), and validation 
+     (10%) sets. 
+   - Three `.jsonl` files are written: `"[base_filename]_training.jsonl"`, 
+     `"[base_filename]_testing.jsonl"`, and `"[base_filename]_validation.jsonl"`. 
+   - A metadata file, `"[base_filename]_metadata.json"`, captures the grammar, roles, and 
+     vocabulary used.
+
+# Returns
+Nothing. The corpus (train/test/validation) and a metadata file describing the grammar are 
+saved to disk as JSON files.
+
+# Example
 
 ```julia
 generate_corpus_CFG(
-    complexity       = 100,
-    num_sentences    = 100_000,
-    enable_polysemy  = false,
-    output_dir       = "/home/user/Documents"
-    base_filename    = "MyDataset"
+    complexity      = 100, 
+    num_sentences   = 100_000, 
+    enable_polysemy = true, 
+    output_dir      = "/path/to/output", 
+    base_filename   = "MyCFGCorpus"
 )
+
 """
 function generate_corpus_CFG(; complexity::Int = 100, 
                                 num_sentences::Int = 100_000, 

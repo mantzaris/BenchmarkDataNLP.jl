@@ -201,35 +201,80 @@ end
 
 
 """
-generate_tps_corpus(
-    complexity::Int,
-    num_lines::Int;
-    output_dir::String=".",
-    base_name::String="MyTPS",
-    n_templates::Int=10,
-    max_placeholders_in_template::Int=4,
-    deterministic::Bool=false
-)::Nothing
+    generate_tps_corpus(
+        complexity::Int,
+        num_lines::Int;
+        output_dir::String = ".",
+        base_name::String = "MyTPS",
+        n_templates::Int = 10,
+        max_placeholders_in_template::Int = 4,
+        deterministic::Bool = false
+    ) -> Nothing
 
-User-facing function to create a templated corpus, split into train/test/val, 
-and save as .jsonl.
+Generates a synthetic text corpus by filling randomly constructed templates with vocabulary 
+tokens. The corpus is split into training, testing, and validation sets (80/10/10) and saved 
+as `.jsonl` files.
 
 # Arguments
-- `complexity`: Controls vocabulary size. 
-- `num_lines`: How many total lines to generate (will be split 80/10/10).
-- `output_dir`: Directory for the output JSONL files.
-- `base_name`: File prefix (e.g. "MyTPS_train.jsonl", etc.).
-- `n_templates`: Number of random templates to generate.
-- `max_placeholders_in_template`: Each template can have up to this many placeholders.
-- `deterministic`: If true, placeholders are filled in a systematic/round-robin manner. 
-If false, placeholders are chosen randomly from the placeholder dictionary.
+
+- `complexity::Int`: Governs the size of the vocabulary and the number of available “bridging words.”
+  Higher values increase the overall variety of tokens.
+- `num_lines::Int`: Total number of lines (sentences) to generate. These lines are then split 
+  into train (80%), test (10%), and validation (10%) sets.
+- `output_dir::String`: Directory path to which the `.jsonl` files are written (default: `"."`).
+- `base_name::String`: Base prefix for output files, e.g., `<base_name>_train.jsonl`, 
+  `<base_name>_test.jsonl`, and `<base_name>_val.jsonl` (default: `"MyTPS"`).
+- `n_templates::Int`: Number of randomly generated templates to build (default: `10`). 
+  Each template specifies a textual skeleton with placeholder slots.
+- `max_placeholders_in_template::Int`: Maximum number of placeholder tokens each template 
+  can contain (default: `4`). These placeholders are drawn from a set of roles (e.g., `SUBJECT`, 
+  `VERB`, `ADJECTIVE`, `OBJECT`).
+- `deterministic::Bool`: If `true`, placeholders in each template are filled using a 
+  systematic (round-robin) approach. If `false`, placeholders are chosen randomly from 
+  the available dictionary.
+
+# Description
+
+1. **Vocabulary & Bridging Words**  
+   - A base vocabulary is built according to `complexity`. 
+   - A subset of the vocabulary is designated as “bridging words,” which act as connecting tokens 
+     (e.g., `"the"`, `"some"`) for the templates.
+   - The remainder of the vocabulary is partitioned into roles for placeholders 
+     (e.g., `:SUBJECT`, `:VERB`, `:ADJECTIVE`, `:OBJECT`).
+
+2. **Template Construction**  
+   - `n_templates` are generated, each containing up to `max_placeholders_in_template` placeholders. 
+   - Between placeholders, random bridging words (or other connectors) are inserted to form a 
+     base template string (e.g., `"the {SUBJECT} a {VERB} some {OBJECT}."`).
+
+3. **Filling Templates**  
+   - For each of the `num_lines` text samples, one template is selected (either in a round-robin 
+     fashion if `deterministic=true`, or randomly otherwise).
+   - The placeholders in that template are then filled with actual words from the assigned 
+     placeholder dictionaries. 
+   - A round-robin strategy ensures systematic coverage of each placeholder’s vocabulary, while 
+     random selection injects more variation.
+
+4. **Output Splitting & JSONL Writing**  
+   - All generated lines are shuffled, then split into 80% training, 10% testing, and 10% validation sets.
+   - Three `.jsonl` files are created with filenames based on `base_name`: 
+     `"<base_name>_train.jsonl"`, `"<base_name>_test.jsonl"`, and `"<base_name>_val.jsonl"`.
+   - Each line in these files is a single JSON object containing the text (e.g., `{"text": "the cat ate some fish."}`).
 
 # Returns
-Nothing. The function writes out train/test/val JSONL files.
 
-# Usage
+Nothing. The final corpus is written to disk in JSON Lines format.
 
-generate_tps_corpus(50, 100; base_name="TemplatedTest", deterministic=false )
+# Example
+
+```julia
+generate_tps_corpus(
+    50,             # complexity
+    100;            # num_lines
+    base_name      = "TemplatedTest",
+    n_templates    = 5,
+    deterministic  = false
+)
 
 """
 function generate_tps_corpus(

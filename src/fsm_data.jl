@@ -288,23 +288,73 @@ end
         max_length::Int=10
     ) -> Nothing
 
-Builds an FSM adjacency according to user options, generates `num_lines` lines 
-by walking that adjacency, then splits lines into 80/10/10 train/test/val sets 
-and writes them to `.jsonl` files with names like `<base_name>_train.jsonl`, etc.
+Generates a synthetic text corpus by constructing a Finite State Machine (FSM) adjacency
+structure and "walking" it to produce lines of text. The resulting lines are automatically
+split into training, testing, and validation sets (80%, 10%, 10%) and saved as JSON lines
+(`.jsonl` files).
+
+# Arguments
+
+- `complexity::Int`: Governs the overall size of the vocabulary and the probability
+  of generating terminal (ending) transitions. Higher complexity results in:
+  - A larger vocabulary.
+  - A lower proportion of transitions that lead immediately to a terminal symbol.
+- `num_lines::Int`: Number of total lines (FSM walks) to generate in the corpus.
 
 # Keyword Arguments
-- `output_dir`: Directory for output files (default ".").
-- `base_name`: Prefix for output filenames (default "MyFSM").
-- `use_context`: Whether to build a context-based adjacency or not.
-- `random_adjacency`: If true, builds a random adjacency. If false, uses a 
-more deterministic adjacency approach (example code).
-- `max_length`: Maximum expansions (or steps) in each line's walk (default=10).
 
-# Usage
+- `output_dir::String`: Directory where the JSONL output files are written (default: `"."`).
+- `base_name::String`: Base filename for the output files. The function creates three JSONL
+  files named `"<base_name>_train.jsonl"`, `"<base_name>_test.jsonl"`, and `"<base_name>_val.jsonl"`.
+- `use_context::Bool`: If `true`, the vocabulary is split into “context words” and 
+  “normal words,” and context words may appear in expansions more frequently to simulate
+  shared or thematic context. If `false`, all words are treated uniformly.
+- `random_adjacency::Bool`: Controls whether the FSM adjacency (i.e., expansions from
+  each word) is created randomly or deterministically:
+  - **`true`**: Each word randomly links to 1–3 possible expansions, some of which might
+    be terminal. 
+  - **`false`**: Each word deterministically expands (e.g., in sorted order), thus
+    producing consistent, repeatable chains.
+- `max_length::Int`: The maximum number of expansions (steps) for each walk (default: `10`).
+  The walk ends if a terminal is reached or `max_length` expansions are exceeded.
+
+# Description
+
+1. **Vocabulary Construction**:
+   - A base alphabet is generated according to the `complexity`.
+   - A vocabulary is created from this alphabet, again sized according to `complexity`.
+   - If `use_context=true`, part of this vocabulary is designated as “context words,” while
+     the remaining words serve as “normal words.”
+
+2. **FSM Adjacency Building**:
+   - If `random_adjacency=true`, each word’s expansions are chosen randomly. A certain
+     fraction of these expansions lead to a terminal symbol (the fraction decreases as 
+     `complexity` increases).
+   - Otherwise (for `random_adjacency=false`), expansions follow a deterministic pattern
+     (e.g., next words in sorted order).
+
+3. **Line Generation**:
+   - For each of the `num_lines`, a starting word is randomly selected.
+   - The function performs a round-robin deterministic walk from that starting word up 
+     to `max_length` expansions or until a terminal expansion is reached. The sequence
+     of tokens visited during this walk is concatenated into a single line of text.
+
+4. **Output**:
+   - All generated lines are randomly shuffled and then split into three sets:
+     - **Training**: 80%
+     - **Testing**: 10%
+     - **Validation**: 10%
+   - These lines are written in `.jsonl` format as `<base_name>_train.jsonl`, 
+     `<base_name>_test.jsonl`, and `<base_name>_val.jsonl`.
+
+# Returns
+Nothing. The generated text corpus is written to disk in JSONL format.
+
+# Example
 
 ```julia
 generate_fsm_corpus(
-    50,                # complexity
+    50,                # complexity -> larger vocabulary, fewer terminal expansions
     100;               # produce 100 lines
     output_dir=".", 
     base_name="MyFSM",
@@ -312,6 +362,7 @@ generate_fsm_corpus(
     random_adjacency=true,
     max_length=12
 )
+
 """
 function generate_fsm_corpus(
     complexity::Int, 
