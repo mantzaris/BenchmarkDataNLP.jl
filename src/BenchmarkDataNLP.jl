@@ -9,18 +9,7 @@ module BenchmarkDataNLP
     include("fsm_data.jl")
     include("tps_data.jl")
 
-    export generate_corpus_CFG, generate_rdf_corpus, generate_fsm_corpus, generate_tps_corpus, greet
+    export generate_corpus_CFG, generate_rdf_corpus, generate_fsm_corpus, generate_tps_corpus
 
-
-    
-    """
-
-        greet()
-
-    Prints a friendly greeting message to the console.
-
-    Returns nothing
-    """
-    greet() = println("Hello World! Yours Truly, B.D.NLP")
 
 end  # module BenchmarkDataNLP
