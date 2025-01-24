@@ -129,7 +129,7 @@ function build_triplestore_random(subjects::Vector{String}, predicates::Vector{S
 end
 
 
-function build_master_vocabulary(complexity::Int)::Vector{String}
+function build_master_vocabulary_rdf(complexity::Int)::Vector{String}
     alpha = sample_alphabet(complexity, alphabet_unicode_start_ind, min_alphabet_size,
                                 alphabet_size_complexity_100)
 
@@ -170,7 +170,7 @@ function make_sentence_from_triple(t::Triple; filler::Vector{String}=String[], m
     return join(tokens, " ") * "."
 end
 
-function produce_paragraphs_with_context(store::Vector{Triple}, num_paragraphs::Int, c::Int;
+function produce_paragraphs_with_context_rdf(store::Vector{Triple}, num_paragraphs::Int, c::Int;
                                             filler::Vector{String}=String[], max_filler::Int=0)::Vector{String}
     lines = String[]
 
@@ -200,7 +200,7 @@ function produce_paragraphs_with_context(store::Vector{Triple}, num_paragraphs::
 end
 
 
-function write_jsonl(lines::Vector{String}, filename::String)
+function write_jsonl_rdf(lines::Vector{String}, filename::String)
     open(filename, "w") do io
         for line in lines
             write(io, "{\"text\":\"$line\"}\n")
@@ -210,7 +210,7 @@ function write_jsonl(lines::Vector{String}, filename::String)
 end
 
 
-function split_and_write_jsonl(lines::Vector{String}, basename::String)
+function split_and_write_jsonl_rdf(lines::Vector{String}, basename::String)
     shuffle!(lines)
 
     tot = length(lines)
@@ -222,9 +222,9 @@ function split_and_write_jsonl(lines::Vector{String}, basename::String)
     test_lines  = lines[ntrain+1 : ntrain+ntest]
     val_lines   = lines[ntrain+ntest+1 : end]
 
-    write_jsonl(train_lines, basename * "_train.jsonl")
-    write_jsonl(test_lines,  basename * "_test.jsonl")
-    write_jsonl(val_lines,   basename * "_val.jsonl")
+    write_jsonl_rdf(train_lines, basename * "_train.jsonl")
+    write_jsonl_rdf(test_lines,  basename * "_test.jsonl")
+    write_jsonl_rdf(val_lines,   basename * "_val.jsonl")
 end
 
 function produce_lines_no_context(store::Vector{Triple}, num_lines::Int; 
@@ -309,22 +309,53 @@ generate_rdf_corpus(
 )
     
 """
-function generate_rdf_corpus(complexity::Int, num_paragraphs::Int; output_dir::String=".",
-                                base_name::String="MyRDF", filler_ratio::Float64=0.0,
-                                max_filler::Int=0, use_context::Bool=false)
+function generate_rdf_corpus(complexity::Int, 
+                                num_paragraphs::Int; 
+                                output_dir::String=".",
+                                base_name::String="MyRDF", 
+                                filler_ratio::Float64=0.0,
+                                max_filler::Int=0, 
+                                use_context::Bool=false)
+
+    #value checks
+    # Attempt to parse the integer parameters
+    local_complexity    = try_to_get_integer(complexity)
+    local_num_paragraphs = try_to_get_integer(num_paragraphs)
+    local_max_filler    = try_to_get_integer(max_filler)
+
+    #validate parsing
+    if local_complexity === nothing || local_complexity <= 0
+        error("`complexity` must be a positive integer, but got `$(complexity)`")
+    end
+    if local_num_paragraphs === nothing || local_num_paragraphs <= 0
+        error("`num_paragraphs` must be a positive integer, but got `$(num_paragraphs)`")
+    end
+    if local_max_filler === nothing || local_max_filler < 0
+        error("`max_filler` must be a non-negative integer, but got `$(max_filler)`")
+    end
+
+    #check filler_ratio’s range
+    if filler_ratio < 0.0 || filler_ratio > 1.0
+        @warn "`filler_ratio` is outside the [0.0, 1.0] range. Current value = $filler_ratio"
+    end
+
+    # Proceed with the original logic using the validated, integer-typed parameters
+    complexity     = local_complexity
+    num_paragraphs = local_num_paragraphs
+    max_filler     = local_max_filler
     
-    vocab = build_master_vocabulary(complexity)
+    vocab = build_master_vocabulary_rdf(complexity)
     store, filler = build_triplestore_for_complexity(vocab, complexity; filler_ratio=filler_ratio)
 
     lines = if use_context
-                produce_paragraphs_with_context(store, num_paragraphs, complexity; filler=filler,
+                produce_paragraphs_with_context_rdf(store, num_paragraphs, complexity; filler=filler,
                                                 max_filler=max_filler)
         else
                 produce_lines_no_context(store, num_paragraphs; filler=filler, max_filler=max_filler)
         end
 
     base_path = joinpath(output_dir, base_name)
-    split_and_write_jsonl(lines, base_path)
+    split_and_write_jsonl_rdf(lines, base_path)
 
     return nothing
 end

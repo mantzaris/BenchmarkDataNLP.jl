@@ -389,6 +389,31 @@ function generate_corpus_CFG(; complexity::Int = 100,
         error("Complexity must be >= 1 and <= 1000")
     end
 
+    #basic input parsing & validation
+    local_complexity   = try_to_get_integer(complexity)
+    local_num_sentences = try_to_get_integer(num_sentences)
+
+    #check for valid integer conversion
+    if local_complexity === nothing
+        error("Could not parse `complexity` as an integer. Received `$(complexity)`")
+    end
+    if local_num_sentences === nothing
+        error("Could not parse `num_sentences` as an integer. Received `$(num_sentences)`")
+    end
+
+    #range checks
+    if local_complexity < 1 || local_complexity > 1000
+        error("`complexity` must be between 1 and 1000. Received $(local_complexity).")
+    end
+    if local_num_sentences < 1
+        error("`num_sentences` must be >= 1. Received $(local_num_sentences).")
+    end
+
+    #put values back
+    complexity = local_complexity
+    num_sentences = local_num_sentences
+
+    #logic for CFG
     alphabet = sample_alphabet(complexity,alphabet_unicode_start_ind,min_alphabet_size,alphabet_size_complexity_100)
     punctuation = sample_punctuation(complexity,punctuation_unicode_start_ind,min_punctuation_size,punctuation_size_complexity_100)
     vocabulary = sample_vocabulary(complexity, alphabet,min_vocabulary_size,vocabulary_size_complexity_100,min_word_size,word_size_complexity_100)

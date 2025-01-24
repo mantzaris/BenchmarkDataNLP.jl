@@ -365,15 +365,38 @@ generate_fsm_corpus(
 
 """
 function generate_fsm_corpus(
-    complexity::Int, 
-    num_lines::Int;
-    output_dir::String=".",
-    base_name::String="MyFSM",
-    use_context::Bool=false,
-    random_adjacency::Bool=false,
-    max_length::Int=10
-) :: Nothing
+            complexity::Int, 
+            num_lines::Int;
+            output_dir::String=".",
+            base_name::String="MyFSM",
+            use_context::Bool=false,
+            random_adjacency::Bool=false,
+            max_length::Int=10
+        ) :: Nothing
 
+
+    # --- Input Validation ---
+    local_complexity = try_to_get_integer(complexity)
+    local_num_lines  = try_to_get_integer(num_lines)
+    local_max_length = try_to_get_integer(max_length)
+
+    if local_complexity === nothing || local_complexity <= 0
+        error("`complexity` must be a positive integer, but got `$(complexity)`")
+    end
+    if local_num_lines === nothing || local_num_lines <= 0
+        error("`num_lines` must be a positive integer, but got `$(num_lines)`")
+    end
+    if local_max_length === nothing || local_max_length < 1
+        error("`max_length` must be at least 1, but got `$(max_length)`")
+    end
+
+    #reassign to ensure we now use the validated integer values
+    complexity = local_complexity
+    num_lines  = local_num_lines
+    max_length = local_max_length
+
+    
+    #main logic
     alpha = sample_alphabet(
         complexity, 
         alphabet_unicode_start_ind,

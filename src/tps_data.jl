@@ -27,7 +27,7 @@ struct TextTemplate
 end
 
 
-function sample_bridging_words(vocab::Vector{String}, c::Int)
+function sample_bridging_words_tps(vocab::Vector{String}, c::Int)
 
     bridging_count = round(Int, linear_extrapolate(
         c,
@@ -51,7 +51,7 @@ end
 
 
 
-function build_master_vocabulary(complexity::Int)::Vector{String}
+function build_master_vocabulary_tps(complexity::Int)::Vector{String}
     alpha = sample_alphabet(
         complexity,
         alphabet_unicode_start_ind,
@@ -74,7 +74,7 @@ end
 
 
 
-function build_placeholder_dict(vocab::Vector{String})::Dict{Symbol, Vector{String}}
+function build_placeholder_dict_tps(vocab::Vector{String})::Dict{Symbol, Vector{String}}
     #shuffle the vocab, pick first N for :SUBJ, next M for :VERB, next L for :ADJ, etc.
     shuffle!(vocab)
     n = length(vocab)
@@ -269,29 +269,58 @@ Nothing. The final corpus is written to disk in JSON Lines format.
 
 ```julia
 generate_tps_corpus(
-    50,             # complexity
-    100;            # num_lines
-    base_name      = "TemplatedTest",
-    n_templates    = 5,
-    deterministic  = false
+    50,                          # complexity
+    100;                         # num_lines
+    output_dir = "./my_outputs", # directory for output JSONL files
+    base_name = "TemplatedTest", # base prefix for output filenames
+    n_templates = 5,             # how many random templates to generate
+    max_placeholders_in_template = 4,  # up to 4 placeholders per template
+    deterministic = false        # if true, fill placeholders round-robin instead of randomly
 )
 
 """
 function generate_tps_corpus(
-    complexity::Int,
-    num_lines::Int;
-    output_dir::String=".",
-    base_name::String="MyTPS",
-    n_templates::Int=10,
-    max_placeholders_in_template::Int=4,
-    deterministic::Bool=false
-)::Nothing
+                    complexity::Int,
+                    num_lines::Int;
+                    output_dir::String=".",
+                    base_name::String="MyTPS",
+                    n_templates::Int=10,
+                    max_placeholders_in_template::Int=4,
+                    deterministic::Bool=false
+                )::Nothing
 
-    vocab = build_master_vocabulary(complexity)
+    #validate and parse integer arguments
+    local_complexity  = try_to_get_integer(complexity)
+    local_num_lines   = try_to_get_integer(num_lines)
+    local_n_templates = try_to_get_integer(n_templates)
+    local_max_placeholders = try_to_get_integer(max_placeholders_in_template)
 
-    bridging_words, remainder_vocab = sample_bridging_words(vocab, complexity)
+    #check if they were all parsed successfully
+    if local_complexity === nothing || local_complexity <= 0
+        error("`complexity` must be a positive integer. Received `$(complexity_arg)`.")
+    end
+    if local_num_lines === nothing || local_num_lines < 1
+        error("`num_lines` must be a positive integer. Received `$(num_lines_arg)`.")
+    end
+    if local_n_templates === nothing || local_n_templates < 1
+        error("`n_templates` must be a positive integer. Received `$(n_templates_arg)`.")
+    end
+    if local_max_placeholders === nothing || local_max_placeholders < 0
+        error("`max_placeholders_in_template` must be non-negative. Received `$(max_placeholders_in_template_arg)`.")
+    end
 
-    ph_dict = build_placeholder_dict(remainder_vocab)
+    #reassign to validated values
+    complexity = local_complexity
+    num_lines = local_num_lines
+    n_templates = local_n_templates
+    max_placeholders_in_template = local_max_placeholders
+
+    #main logic
+    vocab = build_master_vocabulary_tps(complexity)
+
+    bridging_words, remainder_vocab = sample_bridging_words_tps(vocab, complexity)
+
+    ph_dict = build_placeholder_dict_tps(remainder_vocab)
 
     #placeholders from `ph_dict` keys
     available_placeholders = collect(keys(ph_dict))
