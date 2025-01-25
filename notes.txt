@@ -13,3 +13,9 @@ generate_corpus_CFG(complexity=20, num_sentences=100, enable_polysemy=false, bas
   No Changes to `~/Documents/repos/BenchmarkDataNLP.jl/Project.toml`
   No Changes to `~/Documents/repos/BenchmarkDataNLP.jl/Manifest.toml`
 .../repos/BenchmarkDataNLP.jl$ julia --project=. docs/make.jl
+
+
+# for the paper
+pandoc paper.md --pdf-engine=xelatex -o paper.pdf
+sudo apt-get install pandoc-citeproc
+pandoc paper.md   --filter pandoc-citeproc   --pdf-engine=xelatex   -o paper.pdf
