@@ -1,4 +1,4 @@
-# BenchmarkNLP.jl
+# BenchmarkDataNLP.jl
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) 
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://mantzaris.github.io/BenchmarkDataNLP.jl/) 
