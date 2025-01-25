@@ -1,0 +1,21 @@
+name: Compile JOSS Paper
+
+on:
+  push:
+    paths:
+      - "paper/**"
+  pull_request:
+    paths:
+      - "paper/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Compile JOSS Paper
+        uses: openjournals/openjournals-draft-action@v1
+        with:
+          paper-path: paper/paper.md
