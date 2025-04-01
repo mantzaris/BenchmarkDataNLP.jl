@@ -5,20 +5,16 @@ DocMeta.setdocmeta!(BenchmarkDataNLP, :DocTestSetup, :(using BenchmarkDataNLP); 
 
 
 makedocs(
+    modules = [BenchmarkDataNLP],
     authors = "Alexander V. Mantzaris",
     sitename="BenchmarkDataNLP.jl",
-    format =  Documenter.HTML(;
-        canonical="https://mantzaris.github.io/BenchmarkDataNLP.jl",
-        edit_link="main",
-        assets=String[],
-    ),
+    format =  Documenter.HTML(),
     pages = [
         "Home" => "index.md",
         # Add more pages as needed
-    ],    
+    ],
 )
 
 deploydocs(
-    repo = "github.com/mantzaris/BenchmarkDataNLP.jl",
-    devbranch="main",
+    repo = "github.com/mantzaris/BenchmarkDataNLP.jl.git"
 )
