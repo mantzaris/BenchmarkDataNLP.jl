@@ -1,7 +1,7 @@
 name = "BenchmarkDataNLP"
 uuid = "473ed2bd-0a1f-44e6-8c06-93ed739d6613"
 authors = ["Alexander V. Mantzaris <avmantzaris@gmail.com>"]
-version = "0.1.0"
+version = "1.0.1"
 
 [deps]
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
