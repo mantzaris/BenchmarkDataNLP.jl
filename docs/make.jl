@@ -16,5 +16,6 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/mantzaris/BenchmarkDataNLP.jl.git"
+    repo = "github.com/mantzaris/BenchmarkDataNLP.jl.git",
+    devbranch = "main"
 )
