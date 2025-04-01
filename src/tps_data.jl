@@ -277,7 +277,7 @@ generate_tps_corpus(
     max_placeholders_in_template = 4,  # up to 4 placeholders per template
     deterministic = false        # if true, fill placeholders round-robin instead of randomly
 )
-
+```
 """
 function generate_tps_corpus(
                     complexity::Int,

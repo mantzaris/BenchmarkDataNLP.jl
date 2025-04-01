@@ -21,7 +21,33 @@ This toolbox provides multiple generation algorithms—Context-Free Grammars (CF
 
 JSON Lines Output by default, each module writes .jsonl files, split into train, test, and validation sets (80% / 10% / 10%).
 
-## Installation
+## Quick Start Example
+
+### Installation
 
 1. open the Julia REPL, get into package mode pressing `]` and put: `add https://github.com/mantzaris/BenchmarkDataNLP.jl`, and after installation get out of package mode (backspace) and type `using BenchmarkDataNLP`
 2. for development, clone the repo `git clone https://github.com/mantzaris/BenchmarkDataNLP.jl`, move into the repo directory `cd BenchmarkDataNLP.jl`, open the Julia REPL press `]`, `dev .`, exit the package mode and `using BenchmarkDataNLP.jl`
+
+```julia
+using BenchmarkDataNLP
+
+# generate a dataset using Context Free Grammar, at complexity 20, 1000 sentences (800 lines in training, 100 testing, 100 validation) at the path you choose the files to be generated, eg. "/home/user/Documents"
+generate_corpus_CFG(complexity = 20, num_sentences = 1_000, enable_polysemy = false, output_dir = "/home/user/Documents", base_filename = "MyDataset")
+
+#generate using a Finite State Machine based approach
+generate_fsm_corpus(20, 1_000; output_dir="/home/user/Documents", base_name="MyFSM", use_context=true, random_adjacency=true, max_length=12)
+
+#generate using an RDF based approach
+generate_rdf_corpus( 20, 1_000; output_dir = "/home/user/Documents", base_name = "MyRDF", filler_ratio = 0.2, max_filler = 2, use_context = true)
+
+#generate using a Template Strings approach
+generate_tps_corpus( 20, 1_000; output_dir = "/home/user/Documents", base_name = "TemplatedTest", n_templates = 5, max_placeholders_in_template = 4, deterministic = false)
+```
+
+Entries in the .jsonl files produced will look like:
+
+```
+{"text":"갃갇갊 갆 갇 갆 갃가갇."}
+```
+
+Where the characters are in the Hangul region of unicode.

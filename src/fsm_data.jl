@@ -362,7 +362,7 @@ generate_fsm_corpus(
     random_adjacency=true,
     max_length=12
 )
-
+```
 """
 function generate_fsm_corpus(
             complexity::Int, 

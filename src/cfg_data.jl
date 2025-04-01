@@ -120,6 +120,7 @@ end
 #     roles_dict,
 #     grammar
 # )
+#```
 function save_metadata_json_CFG( filename::String, complexity::Int, enable_polysemy::Bool, 
                                 num_sentences::Int,
                                 base_filename::String, alphabet::Vector{Char}, 
@@ -377,7 +378,7 @@ generate_corpus_CFG(
     output_dir      = "/path/to/output", 
     base_filename   = "MyCFGCorpus"
 )
-
+```
 """
 function generate_corpus_CFG(; complexity::Int = 100, 
                                 num_sentences::Int = 100_000, 
