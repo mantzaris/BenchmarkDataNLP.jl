@@ -81,6 +81,8 @@ We welcome contributions from the community! To contribute to this project:
 4. **Test your changes** thoroughly.
 5. Submit a **Pull Request** with a clear description of what you’ve added or changed.
 
+Or for general ideas please feel free to share them.
+
 ---
 
 ## Reporting Issues
