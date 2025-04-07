@@ -44,7 +44,7 @@ Upon generation, the package produces three separate files corresponding to stan
   - Validation Set: Comprising 10% of the data, used for tuning model parameters.
   - Test Set: Comprising 10% of the data, used for evaluating model performance.
 
-These files are named based on the user-defined base filename and are saved in the specified output directory.
+These files are named based on the user-defined base filename and are saved in the specified output directory. The Unicode alphabet used starts at the Hangul block. The reason for this choice is that Hangul Syllables block is one of the largest continuous blocks in the Unicode standard. It contains over 11,000 characters without interruption allowing for large alphabet and punctuation subsets to be selected when being used to make random constructions.
 
 ### Usage Example
 
