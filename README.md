@@ -6,7 +6,7 @@
 
 ## Overview
 
-BenchmarkDataNLP.jl is a Julia project (can be easily used from other languages by calling Julia) that generates synthetic text datasets for natural language processing (NLP) experimentation. The primary goal is to allow researchers and developers to produce language-like corpora of varying sizes and complexities, without immediately investing in large-scale real-world data collection or computationally expensive training runs.
+BenchmarkDataNLP.jl is a Julia project (can be easily used from other languages by calling Julia) that generates synthetic text datasets for natural language processing (NLP) experimentation (characters selected from the Korean Language Unicode block, Hangul). The primary goal is to allow researchers and developers to produce language-like corpora of varying sizes and complexities, without immediately investing in large-scale real-world data collection or computationally expensive training runs.
 This toolbox provides multiple generation algorithms—Context-Free Grammars (CFG), RDF/Triple-store-based corpora, Finite State Machine (FSM) expansions, and Template-based text generation—each supporting a complexity parameter. You can quickly obtain controlled, structured text for model prototyping, or debugging.
 
 ## Some Features
