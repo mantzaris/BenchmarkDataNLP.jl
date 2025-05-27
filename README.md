@@ -1,6 +1,7 @@
 # BenchmarkDataNLP.jl
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) 
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07844/status.svg)](https://doi.org/10.21105/joss.07844)
 [![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://mantzaris.github.io/BenchmarkDataNLP.jl/) 
 [![Build Status](https://github.com/mantzaris/BenchmarkDataNLP.jl/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mantzaris/BenchmarkDataNLP.jl/actions)
 
@@ -51,3 +52,11 @@ Entries in the .jsonl files produced will look like:
 ```
 
 Where the characters are in the Hangul region of unicode.
+
+# Referencing
+
+Citing this work:
+
+```
+@article{Mantzaris2025, doi = {10.21105/joss.07844}, url = {https://doi.org/10.21105/joss.07844}, year = {2025}, publisher = {The Open Journal}, volume = {10}, number = {109}, pages = {7844}, author = {Alexander V. Mantzaris}, title = {BenchmarkDataNLP.jl: Synthetic Data Generation for NLP Benchmarking}, journal = {Journal of Open Source Software} } 
+```
